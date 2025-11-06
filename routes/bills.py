@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from services.bills import get_cached_bills, parse_bills_with_bs
 from services.web_utils import fetch_remote_page
-from services.comments import get_comments_for_bill, add_comment
+from services.comments import get_comments_for_bill, add_comment, delete_comment, update_comment
+from models import User, Comment
 from auth import login_required
 from utils.validators import validate_comment_content, sanitize_input
 from utils.data_fetcher import get_data_fetcher
@@ -70,4 +71,45 @@ def add_bill_comment(bill_id):
     except Exception as e:
         flash('Error adding comment. Please try again.')
     
+    return redirect(url_for('bills.bill_detail', bill_id=bill_id))
+
+@bills_bp.route('/bill/<bill_id>/comment/<int:comment_id>/delete', methods=['POST'])
+@login_required
+def delete_bill_comment(bill_id, comment_id):
+    """Delete a comment. Regular users can delete their own; power users can delete any."""
+    user = User.query.get(session['user_id'])
+    if not user:
+        flash('You must be logged in to delete comments.')
+        return redirect(url_for('bills.bill_detail', bill_id=bill_id))
+    try:
+        if delete_comment(comment_id, user):
+            flash('Comment deleted.')
+        else:
+            flash('You do not have permission to delete this comment.')
+    except Exception:
+        flash('Error deleting comment.')
+    return redirect(url_for('bills.bill_detail', bill_id=bill_id))
+
+@bills_bp.route('/bill/<bill_id>/comment/<int:comment_id>/edit', methods=['POST'])
+@login_required
+def edit_bill_comment(bill_id, comment_id):
+    """Edit a comment content and save it so all users see the updated content."""
+    # Sanitize and validate input
+    new_content = sanitize_input(request.form.get('content', ''), 5000)
+    valid, error = validate_comment_content(new_content)
+    if not valid:
+        flash(error)
+        return redirect(url_for('bills.bill_detail', bill_id=bill_id))
+
+    user = User.query.get(session['user_id'])
+    if not user:
+        flash('You must be logged in to edit comments.')
+        return redirect(url_for('bills.bill_detail', bill_id=bill_id))
+    try:
+        if update_comment(comment_id, user, new_content):
+            flash('Comment updated.')
+        else:
+            flash('You do not have permission to edit this comment.')
+    except Exception:
+        flash('Error updating comment.')
     return redirect(url_for('bills.bill_detail', bill_id=bill_id))
