@@ -1,0 +1,24 @@
+[Unit]
+Description=BecauseImStuck Flask Application
+After=network.target
+
+[Service]
+Type=notify
+User={{ app_user }}
+Group={{ app_user }}
+WorkingDirectory={{ app_dir }}
+Environment="PATH={{ app_dir }}/.venv/bin"
+EnvironmentFile={{ app_dir }}/.env
+ExecStart={{ app_dir }}/.venv/bin/gunicorn \
+    --workers 4 \
+    --bind 0.0.0.0:{{ app_port }} \
+    --timeout 120 \
+    --access-logfile - \
+    --error-logfile - \
+    app:app
+
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

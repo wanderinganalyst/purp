@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}BecauseImStuck{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+      :root {
+        --royal-purple: #4B0082;
+        --light-purple: #8A2BE2;
+        --pale-purple: #E6E6FA;
+        --deep-purple: #2A004C;
+        --accent-purple: #9370DB;
+      }
+      
+      body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .navbar-custom {
+        background: var(--royal-purple);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      
+      .navbar-custom .navbar-brand {
+        color: white !important;
+        font-weight: bold;
+        font-size: 1.3rem;
+      }
+      
+      .navbar-custom .nav-link {
+        color: var(--pale-purple) !important;
+      }
+      
+      .navbar-custom .nav-link:hover {
+        color: white !important;
+      }
+      
+      .sidebar {
+        background: var(--deep-purple);
+        color: white;
+        min-height: calc(100vh - 56px);
+        padding: 1.5rem 1rem;
+      }
+      
+      .sidebar h5 {
+        color: var(--accent-purple);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 1rem;
+        font-weight: 600;
+      }
+      
+      .sidebar .nav-link {
+        color: var(--pale-purple);
+        padding: 0.5rem 0.75rem;
+        border-left: 3px solid transparent;
+        transition: all 0.2s;
+        margin-bottom: 0.25rem;
+      }
+      
+      .sidebar .nav-link:hover {
+        color: white;
+        border-left-color: var(--light-purple);
+        background: rgba(255,255,255,0.1);
+        padding-left: 1rem;
+      }
+      
+      .sidebar .nav-link i {
+        margin-right: 0.5rem;
+      }
+      
+      .rep-card {
+        background: rgba(255,255,255,0.05);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+      }
+      
+      .rep-card .badge {
+        font-size: 0.75rem;
+      }
+      
+      .content-area {
+        background: #f8f9fa;
+        min-height: calc(100vh - 56px);
+        padding: 2rem;
+      }
+      
+      .btn-purple {
+        background: var(--light-purple);
+        color: white;
+        border: none;
+      }
+      
+      .btn-purple:hover {
+        background: var(--deep-purple);
+        color: white;
+      }
+      
+      .alert-custom {
+        background: var(--pale-purple);
+        border: 1px solid var(--royal-purple);
+        color: var(--deep-purple);
+      }
+      
+      .section-divider {
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+        margin: 1.5rem 0;
+      }
+      
+      {% block additional_styles %}{% endblock %}
+    </style>
+  </head>
+  <body>
+    <!-- Top Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('index') }}">
+          <i class="bi bi-building"></i> MO Legislature Tracker
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            {% if session.get('user_id') %}
+              <li class="nav-item">
+                <span class="nav-link">
+                  <i class="bi bi-person-circle"></i> 
+                  <strong>{{ session.get('username') }}</strong> 
+                  <span class="badge bg-light text-dark">{{ session.get('role') }}</span>
+                </span>
+              </li>
+              <li class="nav-item">
+                <form action="{{ url_for('auth.logout') }}" method="post" class="d-inline">
+                  <button type="submit" class="btn btn-purple btn-sm ms-2">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                  </button>
+                </form>
+              </li>
+            {% else %}
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('auth.login') }}">
+                  <i class="bi bi-box-arrow-in-right"></i> Login
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('auth.signup') }}">
+                  <i class="bi bi-person-plus"></i> Sign Up
+                </a>
+              </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="container-fluid flex-grow-1">
+      <div class="row h-100">
+        <!-- Left Sidebar -->
+        <div class="col-md-2 sidebar">
+          {% if session.get('user_id') %}
+            <!-- My Representatives Section -->
+            <div class="mb-4">
+              <h5><i class="bi bi-people-fill"></i> My Representatives</h5>
+              {% set user_reps = get_user_reps() %}
+              {% if user_reps.has_data %}
+                {% if user_reps.senator %}
+                  <div class="rep-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                      <strong class="text-light">State Senator</strong>
+                      <span class="badge bg-primary">{{ user_reps.senator.party }}</span>
+                    </div>
+                    <div class="text-white">{{ user_reps.senator.name }}</div>
+                    <small class="text-muted">District {{ user_reps.senator.district }}</small>
+                  </div>
+                {% endif %}
+                {% if user_reps.representative %}
+                  <div class="rep-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                      <strong class="text-light">State Representative</strong>
+                      <span class="badge bg-primary">{{ user_reps.representative.party }}</span>
+                    </div>
+                    <div class="text-white">{{ user_reps.representative.name }}</div>
+                    <small class="text-muted">District {{ user_reps.representative.district }}</small>
+                  </div>
+                {% endif %}
+              {% else %}
+                <p class="small text-muted mb-0">
+                  <i class="bi bi-info-circle"></i> No representative data available yet.
+                </p>
+              {% endif %}
+            </div>
+            
+            <div class="section-divider"></div>
+            
+            <!-- Profile & Settings Section -->
+            <div class="mb-4">
+              <h5><i class="bi bi-gear-fill"></i> Profile & Settings</h5>
+              <nav class="nav flex-column">
+                <a class="nav-link" href="#"><i class="bi bi-person"></i> Edit Profile</a>
+                <a class="nav-link" href="#"><i class="bi bi-chat-dots"></i> My Comments</a>
+                <a class="nav-link" href="#"><i class="bi bi-bookmark"></i> Saved Bills</a>
+                <a class="nav-link" href="#"><i class="bi bi-bell"></i> Notifications</a>
+                {% if session.get('role') == 'power' %}
+                  <a class="nav-link" href="#">
+                    <i class="bi bi-star-fill"></i> Power Portal
+                  </a>
+                {% endif %}
+              </nav>
+            </div>
+          {% else %}
+            <!-- Get Started Section -->
+            <div class="mb-4">
+              <h5><i class="bi bi-rocket-takeoff"></i> Get Started</h5>
+              <nav class="nav flex-column">
+                <a class="nav-link" href="{{ url_for('auth.login') }}">
+                  <i class="bi bi-box-arrow-in-right"></i> Login
+                </a>
+                <a class="nav-link" href="{{ url_for('auth.signup') }}">
+                  <i class="bi bi-person-plus"></i> Sign Up
+                </a>
+              </nav>
+            </div>
+            
+            <div class="section-divider"></div>
+            
+            <!-- About Section -->
+            <div class="mb-4">
+              <h5><i class="bi bi-info-circle"></i> About</h5>
+              <nav class="nav flex-column">
+                <a class="nav-link" href="#"><i class="bi bi-question-circle"></i> How It Works</a>
+                <a class="nav-link" href="#"><i class="bi bi-lightbulb"></i> Why Track Bills?</a>
+                <a class="nav-link" href="#"><i class="bi bi-envelope"></i> Contact Us</a>
+              </nav>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-8 content-area">
+          {% for msg in get_flashed_messages() %}
+            <div class="alert alert-custom alert-dismissible fade show" role="alert">
+              <i class="bi bi-info-circle-fill"></i> {{ msg }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+
+          {% block content %}{% endblock %}
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="col-md-2 sidebar">
+          <!-- Bills Section -->
+          <div class="mb-4">
+            <h5><i class="bi bi-file-text-fill"></i> Bills</h5>
+            <nav class="nav flex-column">
+              <a class="nav-link" href="{{ url_for('bills.bills_list') }}">
+                <i class="bi bi-list-ul"></i> All Bills
+              </a>
+              <a class="nav-link" href="#"><i class="bi bi-clock-history"></i> Recent Bills</a>
+              <a class="nav-link" href="#"><i class="bi bi-search"></i> Search Bills</a>
+              <a class="nav-link" href="#"><i class="bi bi-tags"></i> Categories</a>
+            </nav>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- Representatives Section -->
+          <div class="mb-4">
+            <h5><i class="bi bi-people"></i> Representatives</h5>
+            <nav class="nav flex-column">
+              <a class="nav-link" href="{{ url_for('reps.reps_list') }}">
+                <i class="bi bi-list-ul"></i> All Representatives
+              </a>
+              <a class="nav-link" href="#"><i class="bi bi-geo-alt"></i> Find My Rep</a>
+              <a class="nav-link" href="#"><i class="bi bi-map"></i> By District</a>
+              <a class="nav-link" href="#"><i class="bi bi-clipboard"></i> By Committee</a>
+            </nav>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- Quick Links Section -->
+          <div class="mb-4">
+            <h5><i class="bi bi-link-45deg"></i> Quick Links</h5>
+            <nav class="nav flex-column">
+              <a class="nav-link" href="#"><i class="bi bi-calendar-event"></i> Calendar</a>
+              <a class="nav-link" href="#"><i class="bi bi-people-fill"></i> Committees</a>
+              <a class="nav-link" href="#"><i class="bi bi-info-square"></i> Session Info</a>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

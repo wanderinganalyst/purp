@@ -1,0 +1,182 @@
+---
+# Ansible Playbook to Deploy BecauseImStuck Application
+# This playbook installs dependencies and deploys the Flask application
+
+- name: Deploy BecauseImStuck Application
+  hosts: all
+  become: yes
+  vars:
+    app_name: becauseimstuck
+    app_user: appuser
+    app_dir: "/home/{{ app_user }}/{{ app_name }}"
+    app_port: 5000
+    python_version: "3.10"
+    
+  tasks:
+    - name: Wait for cloud-init to complete
+      wait_for:
+        path: /tmp/cloud-init-done
+        timeout: 300
+      ignore_errors: yes
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install system dependencies
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - python3-venv
+          - git
+          - curl
+          - build-essential
+          - libssl-dev
+          - libffi-dev
+          - python3-dev
+          - nginx
+        state: present
+
+    - name: Ensure Docker is installed
+      apt:
+        name: docker.io
+        state: present
+
+    - name: Start and enable Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add appuser to docker group
+      user:
+        name: "{{ app_user }}"
+        groups: docker
+        append: yes
+
+    - name: Create application directory
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: '0755'
+
+    - name: Copy application files
+      synchronize:
+        src: "../../../"
+        dest: "{{ app_dir }}"
+        rsync_opts:
+          - "--exclude=.git"
+          - "--exclude=.venv"
+          - "--exclude=__pycache__"
+          - "--exclude=*.pyc"
+          - "--exclude=infrastructure"
+          - "--exclude=tests"
+          - "--exclude=.pytest_cache"
+      delegate_to: localhost
+
+    - name: Set ownership of application files
+      file:
+        path: "{{ app_dir }}"
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        recurse: yes
+
+    - name: Create Python virtual environment
+      become_user: "{{ app_user }}"
+      command: python3 -m venv {{ app_dir }}/.venv
+      args:
+        creates: "{{ app_dir }}/.venv"
+
+    - name: Upgrade pip in virtual environment
+      become_user: "{{ app_user }}"
+      pip:
+        name: pip
+        state: latest
+        virtualenv: "{{ app_dir }}/.venv"
+
+    - name: Check if requirements.txt exists
+      stat:
+        path: "{{ app_dir }}/requirements.txt"
+      register: requirements_file
+
+    - name: Install Python dependencies from requirements.txt
+      become_user: "{{ app_user }}"
+      pip:
+        requirements: "{{ app_dir }}/requirements.txt"
+        virtualenv: "{{ app_dir }}/.venv"
+      when: requirements_file.stat.exists
+
+    - name: Install gunicorn for production
+      become_user: "{{ app_user }}"
+      pip:
+        name: gunicorn
+        virtualenv: "{{ app_dir }}/.venv"
+
+    - name: Create .env file
+      template:
+        src: templates/env.j2
+        dest: "{{ app_dir }}/.env"
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: '0600'
+
+    - name: Create systemd service file
+      template:
+        src: templates/becauseimstuck.service.j2
+        dest: /etc/systemd/system/becauseimstuck.service
+        mode: '0644'
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+
+    - name: Enable and start application service
+      systemd:
+        name: becauseimstuck
+        state: started
+        enabled: yes
+
+    - name: Configure nginx reverse proxy
+      template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/sites-available/becauseimstuck
+        mode: '0644'
+
+    - name: Enable nginx site
+      file:
+        src: /etc/nginx/sites-available/becauseimstuck
+        dest: /etc/nginx/sites-enabled/becauseimstuck
+        state: link
+
+    - name: Remove default nginx site
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
+    - name: Test nginx configuration
+      command: nginx -t
+      changed_when: false
+
+    - name: Restart nginx
+      systemd:
+        name: nginx
+        state: restarted
+
+    - name: Wait for application to be ready
+      wait_for:
+        port: "{{ app_port }}"
+        delay: 5
+        timeout: 60
+
+    - name: Display deployment information
+      debug:
+        msg:
+          - "Application deployed successfully!"
+          - "Application URL: http://{{ ansible_default_ipv4.address }}"
+          - "Direct app port: http://{{ ansible_default_ipv4.address }}:{{ app_port }}"
+          - "Service status: systemctl status becauseimstuck"
+          - "Logs: journalctl -u becauseimstuck -f"

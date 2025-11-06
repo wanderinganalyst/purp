@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}{{ rep.name }} - Representative Profile{% endblock %}
+
+{% block content %}
+    <style>
+      .profile-header { 
+        background: #f4f4f4;
+        padding: 2rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+      }
+      .name { font-size: 2rem; margin-bottom: 1rem; }
+      .meta { color: #555; margin-bottom: 1rem; }
+      .bills-section { 
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #eee;
+      }
+      .bill { 
+        padding: 1rem;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 1rem;
+      }
+      .bill:last-child { border-bottom: none; }
+      .bill .id { font-weight: bold; color: #2b2b2b; }
+      .bill .desc { margin-top: 0.5rem; }
+    </style>
+
+    <div class="profile-header">
+      <h1 class="name">{{ rep.name }}</h1>
+      <div class="meta">
+        {% if rep.district %}
+        <div>District: {{ rep.district }}</div>
+        {% endif %}
+        {% if rep.party %}
+        <div>Party: {{ rep.party }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="bills-section">
+      <h2>Sponsored Bills</h2>
+      {% if rep.sponsored_bills %}
+        {% for bill in rep.sponsored_bills %}
+          <div class="bill">
+            <div class="id"><a href="{{ url_for('bill_detail', bill_id=bill.id) }}">{{ bill.id }}</a></div>
+            <div class="desc">{{ bill.description }}</div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p>No sponsored bills found.</p>
+      {% endif %}
+    </div>
+{% endblock %}

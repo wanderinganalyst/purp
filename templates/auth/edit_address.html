@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Address{% endblock %}
+
+{% block content %}
+<style>
+  .form-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-group label {
+    display: block;
+    color: var(--deep-purple);
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+  }
+  
+  .form-group input,
+  .form-group select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+  
+  .form-group input:focus,
+  .form-group select:focus {
+    border-color: var(--royal-purple);
+    outline: none;
+    box-shadow: 0 0 0 2px var(--pale-purple);
+  }
+  
+  .location-group {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 1rem;
+  }
+  
+  .submit-btn {
+    background: var(--royal-purple);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    width: 100%;
+    margin-top: 1rem;
+    transition: background-color 0.2s;
+  }
+  
+  .submit-btn:hover {
+    background: var(--deep-purple);
+  }
+  
+  .cancel-link {
+    display: block;
+    text-align: center;
+    margin-top: 1rem;
+    color: var(--royal-purple);
+    text-decoration: none;
+  }
+  
+  .cancel-link:hover {
+    text-decoration: underline;
+  }
+</style>
+
+<div class="form-container">
+  <h2 style="color: var(--royal-purple); margin-bottom: 2rem;">Update Your Address</h2>
+  
+  <form method="post">
+    <div class="form-group">
+      <label for="street_address">Street Address</label>
+      <input type="text" id="street_address" name="street_address" 
+             value="{{ user.street_address }}" required
+             placeholder="e.g., 123 Main St">
+    </div>
+
+    <div class="form-group">
+      <label for="apt_unit">Apartment/Unit (optional)</label>
+      <input type="text" id="apt_unit" name="apt_unit" 
+             value="{{ user.apt_unit or '' }}"
+             placeholder="e.g., Apt 4B">
+    </div>
+
+    <div class="form-group">
+      <label for="city">City</label>
+      <input type="text" id="city" name="city" 
+             value="{{ user.city }}" required>
+    </div>
+
+    <div class="location-group">
+      <div class="form-group">
+        <label for="state">State</label>
+        <select id="state" name="state" required>
+          <option value="MO" {% if user.state == 'MO' %}selected{% endif %}>Missouri</option>
+          <!-- Add other states if needed -->
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="zipcode">ZIP Code</label>
+        <input type="text" id="zipcode" name="zipcode" 
+               value="{{ user.zipcode }}" required
+               pattern="\d{5}(-\d{4})?"
+               placeholder="e.g., 12345 or 12345-6789">
+      </div>
+    </div>
+
+    <button type="submit" class="submit-btn">Update Address</button>
+  </form>
+  
+  <a href="{{ url_for('auth.profile') }}" class="cancel-link">Cancel</a>
+</div>
+{% endblock %}

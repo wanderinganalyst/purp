@@ -1,0 +1,7 @@
+# Ansible Requirements
+# Install with: pip install -r requirements.txt
+
+ansible>=2.9.0,<3.0.0
+ansible-core>=2.12.0
+jinja2>=3.0.0
+paramiko>=2.7.0

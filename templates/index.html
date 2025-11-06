@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - BecauseImStuck{% endblock %}
+
+{% block content %}
+  <div class="row">
+    <div class="col-12">
+      {% if user %}
+        <!-- Welcome Card for Logged-in Users -->
+        <div class="card shadow mb-4">
+          <div class="card-body">
+            <h1 class="card-title">
+              <i class="bi bi-house-heart"></i> Welcome Back, {{ user.username }}!
+            </h1>
+            <p class="lead">
+              You're logged in as a 
+              {% if user.role == 'power' %}
+                <span class="badge bg-warning text-dark">
+                  <i class="bi bi-star-fill"></i> Power User
+                </span>
+              {% else %}
+                <span class="badge bg-info">
+                  <i class="bi bi-person"></i> Regular User
+                </span>
+              {% endif %}
+            </p>
+            <hr>
+            {% if user.role == 'power' %}
+              <p>As a power user, you have full access to all features including commenting and bill tracking.</p>
+              <a href="#" class="btn btn-warning">
+                <i class="bi bi-star-fill"></i> Go to Power Portal
+              </a>
+            {% else %}
+              <p>You have read-only access to bills and representative information. Upgrade to a power user account for full features!</p>
+            {% endif %}
+          </div>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div class="row mb-4">
+          <div class="col-md-4">
+            <div class="card text-white bg-primary">
+              <div class="card-body text-center">
+                <i class="bi bi-file-text display-4"></i>
+                <h5 class="card-title mt-2">Bills</h5>
+                <p class="mb-0">Track Missouri legislation</p>
+                <a href="{{ url_for('bills.bills_list') }}" class="btn btn-light btn-sm mt-2">View Bills</a>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-4">
+            <div class="card text-white bg-success">
+              <div class="card-body text-center">
+                <i class="bi bi-people display-4"></i>
+                <h5 class="card-title mt-2">Representatives</h5>
+                <p class="mb-0">Find your legislators</p>
+                <a href="{{ url_for('reps.reps_list') }}" class="btn btn-light btn-sm mt-2">View Reps</a>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-4">
+            <div class="card text-white bg-info">
+              <div class="card-body text-center">
+                <i class="bi bi-person-circle display-4"></i>
+                <h5 class="card-title mt-2">Your Profile</h5>
+                <p class="mb-0">Manage your account</p>
+                <a href="#" class="btn btn-light btn-sm mt-2">Edit Profile</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+      {% else %}
+        <!-- Hero Section for Guests -->
+        <div class="jumbotron bg-light p-5 rounded shadow">
+          <h1 class="display-4">
+            <i class="bi bi-building"></i> Missouri Legislature Tracker
+          </h1>
+          <p class="lead">Stay informed about Missouri state legislation and your representatives.</p>
+          <hr class="my-4">
+          <p>Track bills, find your legislators, and engage with the democratic process. Sign up today to get started!</p>
+          <div class="d-flex gap-2">
+            <a class="btn btn-primary btn-lg" href="{{ url_for('auth.signup') }}" role="button">
+              <i class="bi bi-person-plus"></i> Sign Up
+            </a>
+            <a class="btn btn-outline-primary btn-lg" href="{{ url_for('auth.login') }}" role="button">
+              <i class="bi bi-box-arrow-in-right"></i> Login
+            </a>
+          </div>
+        </div>
+        
+        <!-- Features -->
+        <div class="row mt-5">
+          <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+              <div class="card-body text-center">
+                <i class="bi bi-file-text text-primary display-3"></i>
+                <h5 class="card-title mt-3">Track Bills</h5>
+                <p class="card-text">Follow Missouri legislation as it moves through the process. Get updates on bills that matter to you.</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+              <div class="card-body text-center">
+                <i class="bi bi-people text-success display-3"></i>
+                <h5 class="card-title mt-3">Find Your Reps</h5>
+                <p class="card-text">Discover who represents you in the Missouri legislature based on your address.</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+              <div class="card-body text-center">
+                <i class="bi bi-chat-dots text-info display-3"></i>
+                <h5 class="card-title mt-3">Engage & Comment</h5>
+                <p class="card-text">Share your thoughts on legislation and participate in the democratic process.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

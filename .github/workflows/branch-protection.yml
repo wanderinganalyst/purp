@@ -1,0 +1,47 @@
+name: Branch Protection
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  enforce-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+    
+    - name: Enforce all tests pass
+      run: |
+        pytest --tb=short --maxfail=1 || {
+          echo "❌ Tests must pass before merging!"
+          exit 1
+        }
+    
+    - name: Check test coverage
+      run: |
+        pytest --cov=. --cov-report=term-missing --cov-fail-under=60 \
+               --ignore=tests/docker/ || {
+          echo "❌ Test coverage must be at least 60%"
+          exit 1
+        }
+
+  block-on-failure:
+    runs-on: ubuntu-latest
+    needs: enforce-tests
+    
+    steps:
+    - name: Tests passed
+      run: echo "✅ All tests passed - PR can be merged"

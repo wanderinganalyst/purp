@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - {{ user.username }}{% endblock %}
+
+{% block content %}
+<style>
+  .profile-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .profile-section {
+    background: white;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .section-header {
+    color: var(--royal-purple);
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    border-bottom: 2px solid var(--pale-purple);
+    padding-bottom: 0.5rem;
+  }
+  
+  .info-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  .info-label {
+    font-weight: bold;
+    color: var(--deep-purple);
+    margin-bottom: 0.3rem;
+  }
+  
+  .info-value {
+    color: #444;
+    line-height: 1.4;
+  }
+  
+  .edit-btn {
+    background: var(--royal-purple);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: background-color 0.2s;
+  }
+  
+  .edit-btn:hover {
+    background: var(--deep-purple);
+  }
+  
+  .representatives {
+    background: var(--pale-purple);
+    padding: 1.5rem;
+    border-radius: 6px;
+    margin-top: 1rem;
+  }
+  
+  .rep-card {
+    background: white;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    border-left: 4px solid var(--royal-purple);
+  }
+  
+  .rep-name {
+    font-weight: bold;
+    color: var(--royal-purple);
+    margin-bottom: 0.5rem;
+  }
+  
+  .rep-info {
+    font-size: 0.9rem;
+    color: #666;
+  }
+</style>
+
+<div class="profile-container">
+  <!-- User Information Section -->
+  <div class="profile-section">
+    <h2 class="section-header">Account Information</h2>
+    <div class="info-group">
+      <div class="info-label">Username</div>
+      <div class="info-value">{{ user.username }}</div>
+    </div>
+    <div class="info-group">
+      <div class="info-label">Role</div>
+      <div class="info-value">{{ user.role|title }}</div>
+    </div>
+    <a href="{{ url_for('auth.change_password') }}" class="edit-btn">Change Password</a>
+  </div>
+
+  <!-- Address Section -->
+  <div class="profile-section">
+    <h2 class="section-header">Address Information</h2>
+    <div class="info-group">
+      <div class="info-label">Street Address</div>
+      <div class="info-value">
+        {{ user.street_address }}
+        {% if user.apt_unit %}
+        Unit {{ user.apt_unit }}
+        {% endif %}
+      </div>
+    </div>
+    <div class="info-group">
+      <div class="info-label">Location</div>
+      <div class="info-value">{{ user.city }}, {{ user.state }} {{ user.zipcode }}</div>
+    </div>
+    <div class="info-group">
+      <div class="info-label">Verification Status</div>
+      <div class="info-value">
+        {% if user.address_verified %}
+        <span style="color: green;">✓ Verified</span>
+        {% else %}
+        <span style="color: red;">Not Verified</span>
+        {% endif %}
+      </div>
+    </div>
+    <a href="{{ url_for('auth.edit_address') }}" class="edit-btn">Update Address</a>
+  </div>
+
+  <!-- Representatives Section -->
+  <div class="profile-section">
+    <h2 class="section-header">Your Representatives</h2>
+    {% if rep_info %}
+      <div class="representatives">
+        {% if rep_info.state_senator %}
+        <div class="rep-card">
+          <div class="rep-name">State Senator</div>
+          <div class="rep-info">
+            <div>{{ rep_info.state_senator.name }}</div>
+            <div>District {{ rep_info.state_senator.district }}</div>
+            <div>{{ rep_info.state_senator.party }}</div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if rep_info.state_representative %}
+        <div class="rep-card">
+          <div class="rep-name">State Representative</div>
+          <div class="rep-info">
+            <div>{{ rep_info.state_representative.name }}</div>
+            <div>District {{ rep_info.state_representative.district }}</div>
+            <div>{{ rep_info.state_representative.party }}</div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    {% else %}
+      <p>Unable to find representative information for your address.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

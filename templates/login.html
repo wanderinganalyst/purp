@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - BecauseImStuck{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0"><i class="bi bi-box-arrow-in-right"></i> Login</h4>
+        </div>
+        <div class="card-body">
+          <form method="post" action="{{ url_for('auth.login') }}">
+            <div class="mb-3">
+              <label for="username" class="form-label">Username</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                <input type="text" class="form-control" id="username" name="username" 
+                       required minlength="3" maxlength="150" 
+                       pattern="[a-zA-Z0-9_]+" 
+                       title="Username must be 3-150 characters and contain only letters, numbers, and underscores"
+                       placeholder="Enter your username">
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label for="password" class="form-label">Password</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                <input type="password" class="form-control" id="password" name="password" 
+                       required placeholder="Enter your password">
+              </div>
+            </div>
+            
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-box-arrow-in-right"></i> Log In
+              </button>
+            </div>
+          </form>
+          
+          <hr class="my-4">
+          
+          <div class="alert alert-info">
+            <strong><i class="bi bi-info-circle"></i> Demo Accounts:</strong><br>
+            Regular user: <code>regular</code> / <code>Password1!</code><br>
+            Power user: <code>power</code> / <code>Powerpass1!</code>
+          </div>
+          
+          <div class="text-center">
+            <p class="mb-0">New here? <a href="{{ url_for('auth.signup') }}" class="btn btn-outline-primary">Sign Up</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

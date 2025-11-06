@@ -1,0 +1,135 @@
+{
+  "generated_at": "2025-11-06T13:37:06.670753",
+  "bills": [
+    {
+      "number": "HB 101",
+      "sponsor": "Rep. John Smith",
+      "title": "An Act to Improve Education Funding",
+      "status": "In Committee",
+      "last_action": "2025-11-01",
+      "summary": "This bill proposes to increase education funding by 15% over the next fiscal year.",
+      "committee": "Education Committee",
+      "introduced": "2025-10-15"
+    },
+    {
+      "number": "HB 202",
+      "sponsor": "Rep. Jane Doe",
+      "title": "Transportation Infrastructure Act",
+      "status": "Passed House",
+      "last_action": "2025-11-03",
+      "summary": "Allocates $500 million for highway and bridge repairs across the state.",
+      "committee": "Transportation Committee",
+      "introduced": "2025-10-20"
+    },
+    {
+      "number": "SB 50",
+      "sponsor": "Sen. Robert Johnson",
+      "title": "Healthcare Access Expansion",
+      "status": "Active",
+      "last_action": "2025-11-05",
+      "summary": "Expands healthcare access to underserved communities in rural Missouri.",
+      "committee": "Health and Welfare Committee",
+      "introduced": "2025-10-25"
+    },
+    {
+      "number": "HB 303",
+      "sponsor": "Rep. Maria Garcia",
+      "title": "Small Business Tax Relief",
+      "status": "In Committee",
+      "last_action": "2025-10-30",
+      "summary": "Provides tax incentives for small businesses with fewer than 50 employees.",
+      "committee": "Ways and Means Committee",
+      "introduced": "2025-10-18"
+    },
+    {
+      "number": "SB 75",
+      "sponsor": "Sen. Michael Brown",
+      "title": "Environmental Protection Act",
+      "status": "Passed Senate",
+      "last_action": "2025-11-04",
+      "summary": "Strengthens environmental regulations and establishes new conservation areas.",
+      "committee": "Natural Resources Committee",
+      "introduced": "2025-10-22"
+    },
+    {
+      "number": "HB 404",
+      "sponsor": "Rep. David Wilson",
+      "title": "Criminal Justice Reform",
+      "status": "Active",
+      "last_action": "2025-11-02",
+      "summary": "Reforms sentencing guidelines and expands rehabilitation programs.",
+      "committee": "Judiciary Committee",
+      "introduced": "2025-10-28"
+    },
+    {
+      "number": "HB 505",
+      "sponsor": "Rep. Sarah Lee",
+      "title": "Rural Broadband Expansion",
+      "status": "In Committee",
+      "last_action": "2025-10-29",
+      "summary": "Invests in broadband infrastructure for rural and underserved areas.",
+      "committee": "Technology and Innovation Committee",
+      "introduced": "2025-10-19"
+    },
+    {
+      "number": "SB 100",
+      "sponsor": "Sen. Patricia Martinez",
+      "title": "Worker Protection Act",
+      "status": "Active",
+      "last_action": "2025-11-06",
+      "summary": "Enhances workplace safety standards and worker compensation benefits.",
+      "committee": "Labor and Industrial Relations Committee",
+      "introduced": "2025-10-26"
+    }
+  ],
+  "representatives": {
+    "65101": {
+      "senator": {
+        "name": "Mike Bernskoetter",
+        "district": "6",
+        "party": "Republican"
+      },
+      "representative": {
+        "name": "Dave Griffith",
+        "district": "58",
+        "party": "Republican"
+      }
+    },
+    "63101": {
+      "senator": {
+        "name": "Steve Roberts",
+        "district": "5",
+        "party": "Democrat"
+      },
+      "representative": {
+        "name": "Peter Merideth",
+        "district": "80",
+        "party": "Democrat"
+      }
+    },
+    "64101": {
+      "senator": {
+        "name": "Barbara Washington",
+        "district": "9",
+        "party": "Democrat"
+      },
+      "representative": {
+        "name": "Mark Sharp",
+        "district": "36",
+        "party": "Democrat"
+      }
+    },
+    "default": {
+      "senator": {
+        "name": "Mock Senator",
+        "district": "1",
+        "party": "Independent"
+      },
+      "representative": {
+        "name": "Mock Representative",
+        "district": "1",
+        "party": "Independent"
+      }
+    }
+  }
+}

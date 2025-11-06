@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ bill.id if bill else 'Bill' }}</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding:1rem }
+      .container { max-width:900px; margin:0 auto }
+      .bill { border-bottom:1px solid #eee; padding-bottom:1rem }
+      .comments { margin-top:1.2rem }
+      .comment { border-top:1px solid #f1f1f1; padding:0.6rem 0 }
+      form textarea { width:100%; height:100px }
+      .meta { color:#666 }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      {% if not bill %}
+        <h2>Bill not found</h2>
+        <p>The bill ID {{ request.view_args.bill_id }} was not found in the cached dataset.</p>
+        <p><a href="{{ url_for('bills.bills_list') }}">Back to bills</a></p>
+      {% else %}
+        <div class="bill">
+          <h2>{{ bill.id }}</h2>
+          <div class="meta">Sponsor: {{ bill.sponsor }}</div>
+          <p>{{ bill.description }}</p>
+        </div>
+
+        <div class="comments">
+          <h3>Comments</h3>
+          {% if comments %}
+            {% for c in comments %}
+              <div class="comment">
+                <div>
+                  <strong>{{ c.user.username if c.user else 'Anonymous' }}</strong>
+                  <span class="meta">on {{ c.created_at }}{% if c.is_hidden %} — <em>hidden</em>{% endif %}</span>
+                </div>
+                <div>{{ c.content }}</div>
+
+                <div style="margin-top:0.4rem">
+                  {% if session.get('user_id') and (c.user_id == session.get('user_id') or (session.get('role') == 'power')) %}
+                    <form method="post" action="{{ url_for('delete_comment', comment_id=c.id) }}" style="display:inline">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                      <button type="submit">Delete</button>
+                    </form>
+                  {% endif %}
+
+                  {% if session.get('role') == 'power' %}
+                    <form method="post" action="{{ url_for('hide_comment', comment_id=c.id) }}" style="display:inline; margin-left:0.5rem">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                      <button type="submit">{% if c.is_hidden %}Unhide{% else %}Hide{% endif %}</button>
+                    </form>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p>No comments yet.</p>
+          {% endif %}
+        </div>
+
+        <div class="post-comment">
+          <h4>Post a comment</h4>
+          {% if 'user_id' not in session %}
+            <p><a href="{{ url_for('auth_bp.login') }}">Log in</a> to post a comment.</p>
+          {% else %}
+            <form method="post">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <textarea name="content" placeholder="Write your comment..."></textarea>
+              <button type="submit">Post</button>
+            </form>
+          {% endif %}
+        </div>
+
+        <p><a href="{{ url_for('bills.bills_list') }}">Back to bills</a></p>
+      {% endif %}
+    </div>
+  </body>
+</html>

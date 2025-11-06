@@ -1,0 +1,14 @@
+# Testing dependencies
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-flask>=1.2.0
+pytest-mock>=3.11.1
+beautifulsoup4>=4.12.2
+requests>=2.31.0
+coverage>=7.3.0
+
+# Optional: for parallel test execution
+pytest-xdist>=3.3.1
+
+# Optional: for HTML test reports
+pytest-html>=3.2.0
