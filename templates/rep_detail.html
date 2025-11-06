@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Representative - BecauseImStuck{% endblock %}
+
+{% block content %}
+  {% if rep %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h2 class="card-title mb-1">{{ rep.name }}</h2>
+            <div class="small text-muted">
+              {% if rep.district %}<span class="me-3"><i class="bi bi-geo"></i> District {{ rep.district }}</span>{% endif %}
+              {% if rep.party %}<span class="badge bg-primary">{{ rep.party }}</span>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-file-text"></i> Sponsored Bills</h5>
+      </div>
+      <div class="card-body">
+        {% if rep.sponsored_bills %}
+          <div class="list-group">
+            {% for bill in rep.sponsored_bills %}
+              <a class="list-group-item list-group-item-action" href="{{ url_for('bills.bill_detail', bill_id=(bill.number if bill.number else bill.id)) }}">
+                <div class="d-flex w-100 justify-content-between">
+                  <strong>{{ bill.id }}</strong>
+                </div>
+                {% if bill.description %}<div class="small text-muted mt-1">{{ bill.description }}</div>{% endif %}
+              </a>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted mb-0">No sponsored bills found.</p>
+        {% endif %}
+      </div>
+    </div>
+  {% else %}
+    <div class="alert alert-custom"><i class="bi bi-exclamation-triangle"></i> Representative not found.</div>
+  {% endif %}
+
+  <div class="mt-4">
+    <a href="{{ url_for('reps.reps_list') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to Representatives</a>
+  </div>
+{% endblock %}
