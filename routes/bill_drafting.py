@@ -546,28 +546,34 @@ def browse_rep_drafts(rep_id):
         return redirect(url_for('index'))
     
     # Determine which drafts the user can see
+    drafts = []
     if user:
         if user.role in ['rep', 'admin'] or (user.role == 'staffer' and user.rep_boss_id == rep_id):
             # Reps, admin, and staffers can see all drafts for this rep
-            drafts = get_rep_drafts(rep_id)
+            drafts = get_rep_drafts(rep_id) or []
         elif user.representative_id:
             # Constituents can see public and constituents-only drafts
             user_rep = user.representative
             if user_rep and user_rep.id == rep_id:
                 # This is their representative
-                drafts = [d for d in get_rep_drafts(rep_id) if d.visibility in ['public', 'constituents']]
+                all_drafts = get_rep_drafts(rep_id) or []
+                drafts = [d for d in all_drafts if d.visibility in ['public', 'constituents']]
             else:
                 # Not their rep, only public
-                drafts = [d for d in get_rep_drafts(rep_id) if d.visibility == 'public']
+                all_drafts = get_rep_drafts(rep_id) or []
+                drafts = [d for d in all_drafts if d.visibility == 'public']
         else:
             # Regular users can only see public drafts
-            drafts = [d for d in get_rep_drafts(rep_id) if d.visibility == 'public']
+            all_drafts = get_rep_drafts(rep_id) or []
+            drafts = [d for d in all_drafts if d.visibility == 'public']
     else:
         # Not logged in - only public drafts
-        drafts = [d for d in get_rep_drafts(rep_id) if d.visibility == 'public']
+        all_drafts = get_rep_drafts(rep_id) or []
+        drafts = [d for d in all_drafts if d.visibility == 'public']
     
     # Sort by most recent
-    drafts = sorted(drafts, key=lambda d: d.created_at, reverse=True)
+    if drafts:
+        drafts = sorted(drafts, key=lambda d: d.created_at, reverse=True)
     
     return render_template(
         'bill_drafting/rep_drafts.html',

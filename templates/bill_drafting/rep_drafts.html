@@ -126,19 +126,24 @@
     <div class="card shadow-sm">
         <div class="card-body text-center py-5">
             <i class="fas fa-file-earmark-text fa-4x text-muted mb-3"></i>
-            <h4 class="text-muted">No Draft Bills Available</h4>
+            <h4 class="text-muted">No Draft Bills Yet</h4>
             <p class="text-muted">
                 {% if user and user.role in ['rep', 'admin'] %}
-                    This representative hasn't created any draft bills yet.
+                    {{ representative.name }} hasn't created any draft bills yet.
+                {% elif user and user.representative_id == representative.id %}
+                    Your representative hasn't shared any draft bills with constituents yet.
                 {% else %}
-                    This representative hasn't shared any draft bills publicly yet.
+                    {{ representative.name }} hasn't shared any draft bills publicly yet.
                 {% endif %}
             </p>
             {% if not user %}
             <p class="text-muted">
-                <a href="{{ url_for('auth.login') }}">Log in</a> to see if there are drafts shared with constituents.
+                <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-outline-primary">Log in</a> to see if there are drafts shared with constituents.
             </p>
             {% endif %}
+            <p class="mt-3 text-muted">
+                <small>Draft bills are AI-generated legislative proposals that representatives can share with their constituents for feedback.</small>
+            </p>
         </div>
     </div>
     {% endif %}
