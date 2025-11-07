@@ -162,6 +162,18 @@ def bill_detail(bill_id):
             bills = get_cached_bills()
 
         bill_dict = next((b for b in bills if b.get('number') == bill_id or b.get('id') == bill_id), None) if bills else None
+        
+        # If still not found, create a minimal bill dict with the bill_id
+        # and try to fetch details from official site
+        if not bill_dict:
+            bill_dict = {
+                'number': bill_id,
+                'id': bill_id,
+                'title': None,
+                'description': None,
+                'sponsor': None,
+                'status': None
+            }
 
     # Enrich with official bill details (actions, PDFs, hearing status)
     if bill_dict:
@@ -170,9 +182,9 @@ def bill_detail(bill_id):
             if details:
                 # Merge details into the bill dict for the template
                 bill_dict.update(details)
-        except Exception:
+        except Exception as e:
             # Non-fatal if upstream site changes; continue with base info
-            pass
+            print(f"Error fetching bill details for {bill_id}: {e}")
 
     # Support/oppose counts for this bill (if in DB)
     support_count = 0
