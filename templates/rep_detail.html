@@ -206,7 +206,7 @@
               <div class="list-group">
                 {% for bill in rep.sponsored_bills %}
                   {% set num = bill.number if bill.number else (bill.id if bill.id else bill) %}
-                  <a class="list-group-item list-group-item-action" href="{{ url_for('bills.bill_detail', bill_id=num|replace(' ', '')) }}">
+                  <a class="list-group-item list-group-item-action" href="{{ url_for('bills.bill_detail', bill_id=num) }}">
                     <div class="d-flex justify-content-between align-items-center">
                       <strong style="color: var(--deep-purple);">{{ num }}</strong>
                       <i class="bi bi-chevron-right" style="color: var(--accent-purple);"></i>
@@ -234,7 +234,7 @@
               <div class="list-group">
                 {% for bill in rep.cosponsored_bills %}
                   {% set num = bill.number if bill.number else (bill.id if bill.id else bill) %}
-                  <a class="list-group-item list-group-item-action" href="{{ url_for('bills.bill_detail', bill_id=num|replace(' ', '')) }}">
+                  <a class="list-group-item list-group-item-action" href="{{ url_for('bills.bill_detail', bill_id=num) }}">
                     <div class="d-flex justify-content-between align-items-center">
                       <strong style="color: var(--deep-purple);">{{ num }}</strong>
                       <i class="bi bi-chevron-right" style="color: var(--accent-purple);"></i>

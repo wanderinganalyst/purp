@@ -55,7 +55,11 @@
           {% if bill.sponsor %}
             <span class="me-3">
               <i class="bi bi-person"></i> Sponsor: 
-              <a href="{{ url_for('reps.reps_list') }}" class="text-decoration-none" title="View representative profile">{{ bill.sponsor }}</a>
+              {% if sponsor_rep %}
+                <a href="{{ url_for('reps.rep_detail', district=sponsor_rep.district) }}" class="text-decoration-none" title="View representative profile">{{ bill.sponsor }}</a>
+              {% else %}
+                <a href="{{ url_for('reps.reps_list') }}" class="text-decoration-none" title="View representatives">{{ bill.sponsor }}</a>
+              {% endif %}
             </span>
           {% endif %}
           {% if bill.status %}<span class="me-3"><i class="bi bi-flag"></i> Status: {{ bill.status }}</span>{% endif %}
@@ -275,6 +279,11 @@
 
   <div class="mt-4">
     <a href="{{ url_for('bills.bills_list') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to Bills</a>
+    {% if sponsor_rep %}
+      <a href="{{ url_for('reps.rep_detail', district=sponsor_rep.district) }}" class="btn btn-outline-primary ms-2">
+        <i class="bi bi-person-badge"></i> View Sponsor: {{ sponsor_rep.name }}
+      </a>
+    {% endif %}
   </div>
   <script>
     function toggleEditForm(id) {

@@ -242,15 +242,39 @@ def bill_detail(bill_id):
         if c.user and c.user.thinking_about_running:
             c.is_thinking_running = True
             c.run_support_count = run_support_map.get(c.user.id, 0)
-            c.user_run_supported = c.user.id in user_run_votes
-        else:
             c.is_thinking_running = False
             c.run_support_count = 0
             c.user_run_supported = False
 
+    # Find sponsor's representative if bill has a sponsor
+    sponsor_rep = None
+    if bill_dict and bill_dict.get('sponsor'):
+        try:
+            from models import Representative
+            sponsor_name = bill_dict.get('sponsor', '')
+            # Try to find representative by matching name
+            # The sponsor name might be in format "Rep. John Doe" or just "John Doe"
+            # Try different name matching strategies
+            name_to_search = sponsor_name.replace('Rep. ', '').replace('Senator ', '').strip()
+            
+            # Try exact match first
+            sponsor_rep = Representative.query.filter(
+                db.func.lower(db.func.concat(Representative.first_name, ' ', Representative.last_name)) == name_to_search.lower()
+            ).first()
+            
+            # If no exact match, try partial match on last name
+            if not sponsor_rep and ' ' in name_to_search:
+                last_name = name_to_search.split()[-1]
+                sponsor_rep = Representative.query.filter(
+                    db.func.lower(Representative.last_name) == last_name.lower()
+                ).first()
+        except Exception as e:
+            print(f"Error finding sponsor representative: {e}")
+            sponsor_rep = None
+
     return render_template('bill_detail.html', bill=bill_dict, comments=comments,
                            bill_support_count=support_count, bill_oppose_count=oppose_count,
-                           bill_user_vote=user_vote)
+                           bill_user_vote=user_vote, sponsor_rep=sponsor_rep)
 
 @bills_bp.route('/bill/<bill_id>/comment', methods=['POST'])
 @login_required

@@ -3,13 +3,20 @@ Models package for database models.
 """
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
+from models.document_verification import DocumentVerification
 
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=True)  # Nullable for existing users
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(50), nullable=False, default='regular')  # regular, power, rep, staffer
+    
+    # Email verification fields
+    email_verified = db.Column(db.Boolean, nullable=False, default=False)
+    email_verification_token = db.Column(db.String(255), nullable=True)
+    email_verification_sent_at = db.Column(db.DateTime, nullable=True)
     
     # For rep users: link to their Representative record
     representative_id = db.Column(db.Integer, db.ForeignKey('representatives.id'), nullable=True)
