@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}{{ representative.name }}'s Draft Bills{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="fas fa-file-earmark-text me-2"></i>{{ representative.name }}'s Draft Bills</h1>
+            <p class="text-muted">
+                <i class="fas fa-map-marker-alt me-1"></i>District {{ representative.district }}
+                {% if representative.party %}
+                <span class="badge ms-2" style="background: var(--pale-purple); color: var(--deep-purple);">{{ representative.party }}</span>
+                {% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('representatives.rep_detail', rep_id=representative.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Profile
+            </a>
+        </div>
+    </div>
+
+    <!-- Info Alert -->
+    {% if not user %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Viewing public drafts only.</strong> 
+        <a href="{{ url_for('auth.login') }}">Log in</a> to see drafts shared with constituents.
+    </div>
+    {% elif user and user.representative_id == representative.id %}
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle me-2"></i>
+        <strong>You're viewing drafts from your representative!</strong> 
+        You can see public drafts and those shared with constituents.
+    </div>
+    {% endif %}
+
+    <!-- Draft Count -->
+    <div class="mb-4">
+        <h5>
+            {% if drafts %}
+                Showing {{ drafts|length }} draft bill{{ 's' if drafts|length != 1 else '' }}
+            {% else %}
+                No draft bills available
+            {% endif %}
+        </h5>
+    </div>
+
+    <!-- Drafts List -->
+    {% if drafts %}
+    <div class="row">
+        {% for draft in drafts %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-start" 
+                     style="background: linear-gradient(90deg, var(--pale-purple), #fff);">
+                    <div class="flex-grow-1">
+                        <h5 class="mb-1" style="color: var(--deep-purple);">
+                            <a href="{{ url_for('bill_drafting.view_draft', draft_id=draft.id) }}" 
+                               style="color: var(--deep-purple); text-decoration: none;">
+                                {{ draft.title }}
+                            </a>
+                        </h5>
+                        {% if draft.topic %}
+                        <span class="badge bg-secondary">{{ draft.topic }}</span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        {% if draft.visibility == 'public' %}
+                        <span class="badge bg-success" title="Visible to everyone">
+                            <i class="fas fa-globe"></i> Public
+                        </span>
+                        {% elif draft.visibility == 'constituents' %}
+                        <span class="badge bg-info" title="Visible to constituents">
+                            <i class="fas fa-users"></i> Constituents
+                        </span>
+                        {% else %}
+                        <span class="badge bg-secondary" title="Hidden from public">
+                            <i class="fas fa-lock"></i> Hidden
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if draft.description %}
+                    <p class="card-text">{{ draft.description }}</p>
+                    {% else %}
+                    <p class="card-text text-muted">
+                        <em>{{ draft.content[:200] }}{% if draft.content|length > 200 %}...{% endif %}</em>
+                    </p>
+                    {% endif %}
+                    
+                    <div class="small text-muted mb-3">
+                        <i class="fas fa-calendar me-1"></i>
+                        Created {{ draft.created_at.strftime('%B %d, %Y') }}
+                        {% if draft.updated_at and draft.updated_at != draft.created_at %}
+                        <span class="ms-2">
+                            <i class="fas fa-edit me-1"></i>
+                            Updated {{ draft.updated_at.strftime('%B %d, %Y') }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Comment Count -->
+                    {% if draft.comments %}
+                    <div class="mb-2">
+                        <i class="fas fa-comments me-1"></i>
+                        <span class="text-muted">{{ draft.comments|length }} comment{{ 's' if draft.comments|length != 1 else '' }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-white border-top-0">
+                    <a href="{{ url_for('bill_drafting.view_draft', draft_id=draft.id) }}" 
+                       class="btn btn-sm btn-primary w-100">
+                        <i class="fas fa-eye me-1"></i>View Full Draft & Comments
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- No Drafts Message -->
+    <div class="card shadow-sm">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-file-earmark-text fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">No Draft Bills Available</h4>
+            <p class="text-muted">
+                {% if user and user.role in ['rep', 'admin'] %}
+                    This representative hasn't created any draft bills yet.
+                {% else %}
+                    This representative hasn't shared any draft bills publicly yet.
+                {% endif %}
+            </p>
+            {% if not user %}
+            <p class="text-muted">
+                <a href="{{ url_for('auth.login') }}">Log in</a> to see if there are drafts shared with constituents.
+            </p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Back Button -->
+    <div class="mt-4 text-center">
+        <a href="{{ url_for('representatives.rep_detail', rep_id=representative.id) }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Back to {{ representative.name }}'s Profile
+        </a>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card-header h5 a:hover {
+    text-decoration: underline !important;
+}
+</style>
+{% endblock %}

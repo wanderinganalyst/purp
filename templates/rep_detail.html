@@ -18,6 +18,10 @@
                 <i class="bi bi-heart-fill"></i> Support {{ rep.name.split()[-1] if rep.name else 'Representative' }}
               </button>
               
+              <a href="{{ url_for('bill_drafting.browse_rep_drafts', rep_id=rep.id) }}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-file-earmark-text"></i> View Draft Bills
+              </a>
+              
               {% if session.get('user_id') %}
                 {% set user_reps = get_user_reps() %}
                 {% if user_reps.has_data %}

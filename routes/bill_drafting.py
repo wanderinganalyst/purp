@@ -526,3 +526,52 @@ def delete_draft(draft_id):
         flash(f'Error deleting draft: {str(e)}', 'error')
     
     return redirect(url_for('bill_drafting.workspace'))
+
+
+@bill_drafting_bp.route('/representative/<int:rep_id>/drafts')
+def browse_rep_drafts(rep_id):
+    """
+    Browse public draft bills for a specific representative.
+    Shows drafts with 'public' visibility, or 'constituents' if user is a constituent.
+    """
+    from models import Representative
+    
+    user_id = session.get('user_id')
+    user = User.query.get(user_id) if user_id else None
+    
+    # Get the representative
+    representative = Representative.query.get(rep_id)
+    if not representative:
+        flash('Representative not found.', 'error')
+        return redirect(url_for('index'))
+    
+    # Determine which drafts the user can see
+    if user:
+        if user.role in ['rep', 'admin'] or (user.role == 'staffer' and user.rep_boss_id == rep_id):
+            # Reps, admin, and staffers can see all drafts for this rep
+            drafts = get_rep_drafts(rep_id)
+        elif user.representative_id:
+            # Constituents can see public and constituents-only drafts
+            user_rep = user.representative
+            if user_rep and user_rep.id == rep_id:
+                # This is their representative
+                drafts = [d for d in get_rep_drafts(rep_id) if d.visibility in ['public', 'constituents']]
+            else:
+                # Not their rep, only public
+                drafts = [d for d in get_rep_drafts(rep_id) if d.visibility == 'public']
+        else:
+            # Regular users can only see public drafts
+            drafts = [d for d in get_rep_drafts(rep_id) if d.visibility == 'public']
+    else:
+        # Not logged in - only public drafts
+        drafts = [d for d in get_rep_drafts(rep_id) if d.visibility == 'public']
+    
+    # Sort by most recent
+    drafts = sorted(drafts, key=lambda d: d.created_at, reverse=True)
+    
+    return render_template(
+        'bill_drafting/rep_drafts.html',
+        representative=representative,
+        drafts=drafts,
+        user=user
+    )
