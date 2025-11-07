@@ -6,23 +6,18 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1><i class="fas fa-briefcase me-2"></i>Draft Bill Workspace</h1>
+        {% if user.role == 'admin' and all_reps %}
         <div>
-            {% if user.role == 'admin' and all_reps %}
-            <div class="me-3 d-inline-block">
-                <label for="repSelector" class="form-label mb-0 me-2">Representative:</label>
-                <select id="repSelector" class="form-select d-inline-block" style="width: auto;" onchange="window.location.href='{{ url_for('bill_drafting.workspace') }}?rep_id=' + this.value">
-                    {% for rep in all_reps %}
-                    <option value="{{ rep.id }}" {% if representative and rep.id == representative.id %}selected{% endif %}>
-                        {{ rep.name }} - District {{ rep.district }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            {% endif %}
-            <a href="{{ url_for('bill_drafting.draft_bill') }}" class="btn btn-primary">
-                <i class="fas fa-plus me-1"></i>Create New Draft
-            </a>
+            <label for="repSelector" class="form-label mb-0 me-2">Representative:</label>
+            <select id="repSelector" class="form-select d-inline-block" style="width: auto;" onchange="window.location.href='{{ url_for('bill_drafting.workspace') }}?rep_id=' + this.value">
+                {% for rep in all_reps %}
+                <option value="{{ rep.id }}" {% if representative and rep.id == representative.id %}selected{% endif %}>
+                    {{ rep.name }} - District {{ rep.district }}
+                </option>
+                {% endfor %}
+            </select>
         </div>
+        {% endif %}
     </div>
 
     <!-- Statistics Cards -->
