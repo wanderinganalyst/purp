@@ -127,6 +127,7 @@ def rep_detail(district):
                 })
 
         rep = {
+            'id': r.id,
             'name': name,
             'district': r.district,
             'party': r.party,
