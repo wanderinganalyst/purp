@@ -77,5 +77,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PostgreSQL integration
 - Basic README
 
-[Unreleased]: https://github.com/YOUR_USERNAME/becauseImstuck/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/YOUR_USERNAME/becauseImstuck/releases/tag/v0.1.0
+[Unreleased]: https://github.com/YOUR_USERNAME/purp/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/YOUR_USERNAME/purp/releases/tag/v0.1.0

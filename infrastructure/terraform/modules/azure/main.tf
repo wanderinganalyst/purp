@@ -1,4 +1,4 @@
-# Azure Infrastructure Module for BecauseImStuck
+# Azure Infrastructure Module for Purp
 
 variable "project_name" { type = string }
 variable "environment" { type = string }

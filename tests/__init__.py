@@ -1,3 +1,3 @@
 """
-Test suite for BecauseImStuck application
+Test suite for Purp application
 """

@@ -1,4 +1,4 @@
-# Main Terraform Configuration for BecauseImStuck
+# Main Terraform Configuration for Purp
 # Supports AWS, Azure, and GCP deployment with production and demo modes
 
 terraform {
@@ -47,7 +47,7 @@ variable "environment" {
 variable "project_name" {
   description = "Project name"
   type        = string
-  default     = "becauseimstuck"
+  default     = "purp"
 }
 
 variable "region" {

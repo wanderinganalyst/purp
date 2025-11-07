@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test runner script for BecauseImStuck application
+Test runner script for Purp application
 Runs all tests and generates reports
 """
 
@@ -55,7 +55,7 @@ def main():
     """Main entry point."""
     import argparse
     
-    parser = argparse.ArgumentParser(description='Run tests for BecauseImStuck application')
+    parser = argparse.ArgumentParser(description='Run tests for Purp application')
     parser.add_argument(
         'test_type',
         nargs='?',

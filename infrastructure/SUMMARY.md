@@ -2,7 +2,7 @@
 
 ## What Was Created
 
-This infrastructure setup provides complete multi-cloud deployment automation for the BecauseImStuck Flask application.
+This infrastructure setup provides complete multi-cloud deployment automation for the Purp Flask application.
 
 ## Files Created
 
@@ -69,7 +69,7 @@ This infrastructure setup provides complete multi-cloud deployment automation fo
    - Flask configuration
    - Secret key generation
 
-9. **ansible/playbooks/templates/becauseimstuck.service.j2**
+9. **ansible/playbooks/templates/purp.service.j2**
    - Systemd service unit file
    - Gunicorn with 4 workers
    - Auto-restart on failure
@@ -259,7 +259,7 @@ After deployment, you can:
 
 1. **Access the app**: Visit `http://INSTANCE-IP`
 2. **SSH to instance**: Use displayed SSH command
-3. **Check logs**: `journalctl -u becauseimstuck -f`
+3. **Check logs**: `journalctl -u purp -f`
 4. **Add domain**: Point DNS to IP address
 5. **Add SSL**: Use Let's Encrypt/Certbot
 6. **Scale up**: Modify tfvars for larger instances
@@ -343,7 +343,7 @@ Just run deploy script again - it's idempotent!
 
 ## Contributors
 
-Infrastructure created as a complete multi-cloud deployment solution for the BecauseImStuck Flask application.
+Infrastructure created as a complete multi-cloud deployment solution for the Purp Flask application.
 
 ## License
 

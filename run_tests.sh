@@ -3,7 +3,7 @@
 
 set -e
 
-echo "🧪 BecauseImStuck Test Suite"
+echo "🧪 Purp Test Suite"
 echo "=============================="
 echo ""
 

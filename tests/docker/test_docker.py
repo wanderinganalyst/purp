@@ -23,7 +23,7 @@ class TestDockerBuild:
         """Test that Docker image builds successfully."""
         try:
             result = subprocess.run(
-                ['docker', 'build', '-t', 'becauseimstuck-test', '.'],
+                ['docker', 'build', '-t', 'purp-test', '.'],
                 cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
                 capture_output=True,
                 text=True,
@@ -45,7 +45,7 @@ class TestDockerBuild:
         try:
             # First build the image
             subprocess.run(
-                ['docker', 'build', '-t', 'becauseimstuck-test', '.'],
+                ['docker', 'build', '-t', 'purp-test', '.'],
                 cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
                 capture_output=True,
                 timeout=300
@@ -53,7 +53,7 @@ class TestDockerBuild:
             
             # Check image size
             result = subprocess.run(
-                ['docker', 'images', 'becauseimstuck-test', '--format', '{{.Size}}'],
+                ['docker', 'images', 'purp-test', '--format', '{{.Size}}'],
                 capture_output=True,
                 text=True
             )
@@ -142,7 +142,7 @@ class TestDockerContainer:
         try:
             # Build image first
             subprocess.run(
-                ['docker', 'build', '-t', 'becauseimstuck-test', '.'],
+                ['docker', 'build', '-t', 'purp-test', '.'],
                 cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
                 capture_output=True,
                 timeout=300
@@ -150,7 +150,7 @@ class TestDockerContainer:
             
             # Run container
             container = subprocess.Popen(
-                ['docker', 'run', '--rm', '-p', '5001:5000', 'becauseimstuck-test'],
+                ['docker', 'run', '--rm', '-p', '5001:5000', 'purp-test'],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
@@ -174,7 +174,7 @@ class TestDockerContainer:
         try:
             # Build image
             subprocess.run(
-                ['docker', 'build', '-t', 'becauseimstuck-test', '.'],
+                ['docker', 'build', '-t', 'purp-test', '.'],
                 cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
                 capture_output=True,
                 timeout=300
@@ -182,7 +182,7 @@ class TestDockerContainer:
             
             # Run container
             container = subprocess.Popen(
-                ['docker', 'run', '--rm', '-p', '5001:5000', 'becauseimstuck-test'],
+                ['docker', 'run', '--rm', '-p', '5001:5000', 'purp-test'],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
@@ -237,13 +237,13 @@ class TestDockerCleanup:
         try:
             # Stop any running test containers
             subprocess.run(
-                ['docker', 'ps', '-a', '-q', '--filter', 'ancestor=becauseimstuck-test'],
+                ['docker', 'ps', '-a', '-q', '--filter', 'ancestor=purp-test'],
                 capture_output=True
             )
             
             # Remove test image
             subprocess.run(
-                ['docker', 'rmi', '-f', 'becauseimstuck-test'],
+                ['docker', 'rmi', '-f', 'purp-test'],
                 capture_output=True
             )
             

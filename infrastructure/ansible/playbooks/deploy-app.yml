@@ -1,12 +1,12 @@
 ---
-# Ansible Playbook to Deploy BecauseImStuck Application
+# Ansible Playbook to Deploy Purp Application
 # This playbook installs dependencies and deploys the Flask application
 
-- name: Deploy BecauseImStuck Application
+- name: Deploy Purp Application
   hosts: all
   become: yes
   vars:
-    app_name: becauseimstuck
+    app_name: purp
     app_user: appuser
     app_dir: "/home/{{ app_user }}/{{ app_name }}"
     app_port: 5000
@@ -126,8 +126,8 @@
 
     - name: Create systemd service file
       template:
-        src: templates/becauseimstuck.service.j2
-        dest: /etc/systemd/system/becauseimstuck.service
+        src: templates/purp.service.j2
+        dest: /etc/systemd/system/purp.service
         mode: '0644'
 
     - name: Reload systemd daemon
@@ -136,20 +136,20 @@
 
     - name: Enable and start application service
       systemd:
-        name: becauseimstuck
+        name: purp
         state: started
         enabled: yes
 
     - name: Configure nginx reverse proxy
       template:
         src: templates/nginx.conf.j2
-        dest: /etc/nginx/sites-available/becauseimstuck
+        dest: /etc/nginx/sites-available/purp
         mode: '0644'
 
     - name: Enable nginx site
       file:
-        src: /etc/nginx/sites-available/becauseimstuck
-        dest: /etc/nginx/sites-enabled/becauseimstuck
+        src: /etc/nginx/sites-available/purp
+        dest: /etc/nginx/sites-enabled/purp
         state: link
 
     - name: Remove default nginx site
@@ -178,5 +178,5 @@
           - "Application deployed successfully!"
           - "Application URL: http://{{ ansible_default_ipv4.address }}"
           - "Direct app port: http://{{ ansible_default_ipv4.address }}:{{ app_port }}"
-          - "Service status: systemctl status becauseimstuck"
-          - "Logs: journalctl -u becauseimstuck -f"
+          - "Service status: systemctl status purp"
+          - "Logs: journalctl -u purp -f"

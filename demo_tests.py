@@ -9,7 +9,7 @@ import os
 
 print("""
 ╔════════════════════════════════════════════════════════════════════╗
-║         BecauseImStuck - Test Suite Quick Demo                    ║
+║         Purp - Test Suite Quick Demo                    ║
 ╚════════════════════════════════════════════════════════════════════╝
 
 Running a quick subset of tests to demonstrate functionality...

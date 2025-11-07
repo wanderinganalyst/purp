@@ -131,7 +131,7 @@ The data fetcher is integrated into:
 To verify the data fetcher is working:
 
 ```bash
-cd /Users/joeoconnell/becauseImstuck
+cd /Users/joeoconnell/purp
 source .venv/bin/activate
 python -c "from utils.data_fetcher import get_data_fetcher; fetcher = get_data_fetcher(); print('Bills:', len(fetcher.fetch_bills())); print('Reps:', fetcher.fetch_representatives({'zip': '65101'}))"
 ```

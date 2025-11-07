@@ -1,5 +1,5 @@
 #!/bin/bash
-# Automated Deployment Script for BecauseImStuck
+# Automated Deployment Script for Purp
 # Deploys to AWS, Azure, or GCP using Terraform and Ansible
 
 set -e  # Exit on error
@@ -291,7 +291,7 @@ display_deployment_info() {
     echo -e "${BLUE}  $SSH_COMMAND${NC}"
     echo ""
     echo "View application logs:"
-    echo -e "${BLUE}  ssh [...] 'journalctl -u becauseimstuck -f'${NC}"
+    echo -e "${BLUE}  ssh [...] 'journalctl -u purp -f'${NC}"
     echo ""
     echo "To destroy the infrastructure:"
     echo -e "${BLUE}  cd $TERRAFORM_DIR && terraform destroy${NC}"
@@ -300,7 +300,7 @@ display_deployment_info() {
 
 # Main execution
 main() {
-    print_header "BecauseImStuck Deployment Script"
+    print_header "Purp Deployment Script"
     
     check_prerequisites
     select_cloud_provider

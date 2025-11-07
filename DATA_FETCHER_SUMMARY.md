@@ -122,7 +122,7 @@ reps = fetcher.fetch_representatives(address_data)
 ```
 🔧 Running in DEVELOPMENT mode - using mock data
 Generating mock data...
-✓ Saved mock data to /Users/joeoconnell/becauseImstuck/data/mock_data.json
+✓ Saved mock data to /Users/joeoconnell/purp/data/mock_data.json
 ```
 
 ### Subsequent Runs (Development Mode)
@@ -134,7 +134,7 @@ Generating mock data...
 **Console Output**:
 ```
 🔧 Running in DEVELOPMENT mode - using mock data
-✓ Loaded mock data from /Users/joeoconnell/becauseImstuck/data/mock_data.json
+✓ Loaded mock data from /Users/joeoconnell/purp/data/mock_data.json
 ```
 
 ### Production Mode
@@ -237,7 +237,7 @@ reps = fetcher.fetch_representatives(address_data)
 ## File Structure
 
 ```
-becauseImstuck/
+purp/
 ├── utils/
 │   ├── data_fetcher.py          # Main data fetcher module
 │   └── environment.py            # Environment helpers

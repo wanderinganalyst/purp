@@ -74,7 +74,7 @@ $ cd infrastructure/scripts
 $ ./deploy.sh
 
 ===================================
-BecauseImStuck Deployment Script
+Purp Deployment Script
 ===================================
 
 ===================================

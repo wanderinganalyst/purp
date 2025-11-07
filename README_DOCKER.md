@@ -1,6 +1,6 @@
 # Running the Flask app with Docker
 
-This page describes how to build and run the `becauseImstuck` Flask app in Docker on macOS (zsh). Use these instructions when you want a containerized, production-like run (the image uses `gunicorn`).
+This page describes how to build and run the `purp` Flask app in Docker on macOS (zsh). Use these instructions when you want a containerized, production-like run (the image uses `gunicorn`).
 
 Prerequisites
 - Docker installed and running: https://docs.docker.com/get-docker/

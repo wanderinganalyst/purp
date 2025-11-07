@@ -97,8 +97,8 @@ Optional (will run but won't block):
 Add these to your main README.md:
 
 ```markdown
-![Tests](https://github.com/YOUR_USERNAME/becauseImstuck/workflows/Test%20Suite/badge.svg)
-![Security](https://github.com/YOUR_USERNAME/becauseImstuck/workflows/Branch%20Protection/badge.svg)
+![Tests](https://github.com/YOUR_USERNAME/purp/workflows/Test%20Suite/badge.svg)
+![Security](https://github.com/YOUR_USERNAME/purp/workflows/Branch%20Protection/badge.svg)
 ```
 
 ## Environment Variables & Secrets

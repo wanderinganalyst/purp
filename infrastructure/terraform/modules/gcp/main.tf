@@ -1,4 +1,4 @@
-# GCP Infrastructure Module for BecauseImStuck
+# GCP Infrastructure Module for Purp
 
 variable "project_name" { type = string }
 variable "environment" { type = string }

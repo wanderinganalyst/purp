@@ -2,7 +2,7 @@
 
 ## Summary
 
-Successfully created a complete multi-cloud infrastructure-as-code solution for the BecauseImStuck Flask application.
+Successfully created a complete multi-cloud infrastructure-as-code solution for the Purp Flask application.
 
 ## Statistics
 
@@ -25,7 +25,7 @@ Successfully created a complete multi-cloud infrastructure-as-code solution for 
 ### Ansible Deployment (7 files)
 7. `ansible/playbooks/deploy-app.yml` - Deployment playbook (185 lines)
 8. `ansible/playbooks/templates/env.j2` - Environment template
-9. `ansible/playbooks/templates/becauseimstuck.service.j2` - Systemd service
+9. `ansible/playbooks/templates/purp.service.j2` - Systemd service
 10. `ansible/playbooks/templates/nginx.conf.j2` - Nginx config
 11. `ansible/requirements.txt` - Ansible dependencies
 12. `ansible/inventory.ini.template` - Inventory template
@@ -146,7 +146,7 @@ $ cd infrastructure/scripts
 $ ./deploy.sh
 
 ===================================
-BecauseImStuck Deployment Script
+Purp Deployment Script
 ===================================
 
 ✓ Terraform found: 1.6.0
@@ -188,7 +188,7 @@ Access your application:
   http://54.123.45.67
 
 SSH into the instance:
-  ssh -i ../keys/becauseimstuck-demo-aws.pem ubuntu@54.123.45.67
+  ssh -i ../keys/purp-demo-aws.pem ubuntu@54.123.45.67
 ```
 
 ## Architecture Overview
@@ -315,7 +315,7 @@ See [README.md](README.md#troubleshooting) for:
 1. Check [TESTING.md](TESTING.md) for verification steps
 2. Review [README.md](README.md) troubleshooting section
 3. Enable debug mode: `export TF_LOG=DEBUG`
-4. Check application logs: `journalctl -u becauseimstuck -f`
+4. Check application logs: `journalctl -u purp -f`
 
 ## Success Criteria
 
@@ -332,7 +332,7 @@ See [README.md](README.md#troubleshooting) for:
 
 ## Congratulations! 🎉
 
-You now have a complete, production-ready, multi-cloud infrastructure-as-code solution for the BecauseImStuck application!
+You now have a complete, production-ready, multi-cloud infrastructure-as-code solution for the Purp application!
 
 **Ready to deploy?**
 

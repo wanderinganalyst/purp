@@ -1,14 +1,14 @@
-# Contributing to BecauseImStuck
+# Contributing to Purp
 
-Thank you for considering contributing to BecauseImStuck! This document outlines the process and guidelines.
+Thank you for considering contributing to Purp! This document outlines the process and guidelines.
 
 ## Getting Started
 
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/becauseImstuck.git
-   cd becauseImstuck
+   git clone https://github.com/YOUR_USERNAME/purp.git
+   cd purp
    ```
 3. **Set up development environment**:
    ```bash

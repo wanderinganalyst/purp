@@ -109,10 +109,10 @@ ansible-playbook --syntax-check playbooks/deploy-app.yml
 
 ```bash
 # SSH into instance
-ssh -i keys/becauseimstuck-*-*.pem ubuntu@<INSTANCE-IP>
+ssh -i keys/purp-*-*.pem ubuntu@<INSTANCE-IP>
 
 # Check systemd service
-sudo systemctl status becauseimstuck
+sudo systemctl status purp
 # Should show: Active: active (running)
 
 # Check nginx
@@ -120,7 +120,7 @@ sudo systemctl status nginx
 # Should show: Active: active (running)
 
 # Check application logs
-sudo journalctl -u becauseimstuck -n 50
+sudo journalctl -u purp -n 50
 # Should show Flask/Gunicorn logs
 
 # Check processes
@@ -132,7 +132,7 @@ sudo netstat -tlnp | grep -E '(80|5000)'
 # Should show nginx on :80 and gunicorn on :5000
 
 # Test database
-cd /home/appuser/becauseimstuck
+cd /home/appuser/purp
 source .venv/bin/activate
 python -c "from models import db; print('DB OK')"
 
@@ -175,7 +175,7 @@ open http://<INSTANCE-IP>  # macOS
 
 ```bash
 # Test SSH key authentication
-ssh -i keys/becauseimstuck-*-*.pem ubuntu@<INSTANCE-IP> "echo 'SSH works'"
+ssh -i keys/purp-*-*.pem ubuntu@<INSTANCE-IP> "echo 'SSH works'"
 # Should print: SSH works
 
 # Verify no password authentication
@@ -187,7 +187,7 @@ aws ec2 describe-security-groups --group-ids <SG-ID>
 # Should show ports 22, 80, 443, 5000
 
 # Check file permissions
-ssh -i keys/becauseimstuck-*-*.pem ubuntu@<INSTANCE-IP> "ls -la ~/becauseimstuck/.env"
+ssh -i keys/purp-*-*.pem ubuntu@<INSTANCE-IP> "ls -la ~/purp/.env"
 # Should show: -rw------- (600)
 
 # Verify SSH key permissions
@@ -231,15 +231,15 @@ cd infrastructure/scripts
 ### Verify Cleanup
 ```bash
 # AWS
-aws ec2 describe-instances --filters "Name=tag:Project,Values=BecauseImStuck"
+aws ec2 describe-instances --filters "Name=tag:Project,Values=Purp"
 # Should show no running instances
 
 # Azure
-az vm list -g becauseimstuck-*-rg
+az vm list -g purp-*-rg
 # Should show empty array
 
 # GCP
-gcloud compute instances list --filter="labels.project=becauseimstuck"
+gcloud compute instances list --filter="labels.project=purp"
 # Should show no instances
 
 # Check local files cleaned
@@ -295,10 +295,10 @@ ab -n 100 -c 10 http://<INSTANCE-IP>/
 ### Database Performance
 ```bash
 # SSH to instance
-ssh -i keys/becauseimstuck-*-*.pem ubuntu@<INSTANCE-IP>
+ssh -i keys/purp-*-*.pem ubuntu@<INSTANCE-IP>
 
 # Run Python performance test
-cd /home/appuser/becauseimstuck
+cd /home/appuser/purp
 source .venv/bin/activate
 python -c "
 import time

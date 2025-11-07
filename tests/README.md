@@ -2,7 +2,7 @@
 
 ## Overview
 
-Comprehensive test suite for the BecauseImStuck application covering unit tests, integration tests, end-to-end tests, and Docker container tests.
+Comprehensive test suite for the Purp application covering unit tests, integration tests, end-to-end tests, and Docker container tests.
 
 ## Test Structure
 
@@ -313,8 +313,8 @@ rm -f instance/test*.db
 docker ps
 
 # Clean up test containers
-docker rm -f $(docker ps -aq --filter ancestor=becauseimstuck-test)
-docker rmi becauseimstuck-test
+docker rm -f $(docker ps -aq --filter ancestor=purp-test)
+docker rmi purp-test
 ```
 
 ### Port Already in Use

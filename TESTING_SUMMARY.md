@@ -2,7 +2,7 @@
 
 ## Overview
 
-Complete testing infrastructure for the BecauseImStuck Flask application with 100+ tests covering:
+Complete testing infrastructure for the Purp Flask application with 100+ tests covering:
 - ✅ Unit tests for all Python modules
 - ✅ Integration tests for all routes
 - ✅ End-to-end tests for HTML forms and workflows  

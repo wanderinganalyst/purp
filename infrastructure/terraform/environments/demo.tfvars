@@ -19,7 +19,7 @@ app_port = 5000
 # Tags
 tags = {
   Environment = "demo"
-  Project     = "BecauseImStuck"
+  Project     = "Purp"
   ManagedBy   = "Terraform"
   Owner       = "DevOps Team"
 }

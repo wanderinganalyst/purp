@@ -272,7 +272,7 @@ rm -f tests/*.db instance/test*.db
 ### Docker Errors
 ```bash
 docker ps  # Ensure Docker running
-docker rm -f $(docker ps -aq --filter ancestor=becauseimstuck-test)
+docker rm -f $(docker ps -aq --filter ancestor=purp-test)
 ```
 
 ### Port Conflicts

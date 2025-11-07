@@ -329,7 +329,7 @@ infrastructure/
 │   │   ├── deploy-app.yml          # Main playbook
 │   │   └── templates/
 │   │       ├── env.j2              # Environment vars
-│   │       ├── becauseimstuck.service.j2  # Systemd
+│   │       ├── purp.service.j2  # Systemd
 │   │       └── nginx.conf.j2       # Nginx config
 │   └── requirements.txt            # Ansible dependencies
 │

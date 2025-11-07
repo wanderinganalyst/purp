@@ -2,7 +2,7 @@
 
 ## Overview
 
-This infrastructure-as-code (IaC) setup allows you to deploy the BecauseImStuck application to AWS, Azure, or GCP with a single command. It uses:
+This infrastructure-as-code (IaC) setup allows you to deploy the Purp application to AWS, Azure, or GCP with a single command. It uses:
 
 - **Terraform** for infrastructure provisioning
 - **Ansible** for application deployment and configuration
@@ -98,7 +98,7 @@ infrastructure/
 │       ├── deploy-app.yml        # Application deployment playbook
 │       └── templates/
 │           ├── env.j2            # Environment file template
-│           ├── becauseimstuck.service.j2  # Systemd service
+│           ├── purp.service.j2  # Systemd service
 │           └── nginx.conf.j2     # Nginx configuration
 ├── scripts/
 │   ├── deploy.sh                 # Main deployment script
@@ -186,7 +186,7 @@ cat > inventory.ini <<EOF
 
 [app:vars]
 ansible_user=ubuntu
-ansible_ssh_private_key_file=../keys/becauseimstuck-production-aws.pem
+ansible_ssh_private_key_file=../keys/purp-production-aws.pem
 ansible_ssh_common_args='-o StrictHostKeyChecking=no'
 environment=production
 app_port=5000
@@ -222,7 +222,7 @@ app_port = 5000
 # Tags
 tags = {
   Environment = "production"
-  Project     = "BecauseImStuck"
+  Project     = "Purp"
 }
 ```
 
@@ -269,7 +269,7 @@ tags = {
 ### What Ansible Installs
 
 1. **System packages**: Python 3, pip, venv, git, curl, nginx, Docker
-2. **Application**: Cloned to `/home/appuser/becauseimstuck`
+2. **Application**: Cloned to `/home/appuser/purp`
 3. **Python environment**: Virtual environment with all dependencies
 4. **Gunicorn**: WSGI server with 4 workers
 5. **Systemd service**: Manages application lifecycle
@@ -278,7 +278,7 @@ tags = {
 ### Application Structure
 
 ```
-/home/appuser/becauseimstuck/
+/home/appuser/purp/
 ├── .venv/              # Virtual environment
 ├── .env                # Environment configuration
 ├── app.py              # Flask application
@@ -296,13 +296,13 @@ tags = {
 
 ```bash
 # SSH into instance
-ssh -i ../keys/becauseimstuck-production-aws.pem ubuntu@54.123.45.67
+ssh -i ../keys/purp-production-aws.pem ubuntu@54.123.45.67
 
 # Check service status
-sudo systemctl status becauseimstuck
+sudo systemctl status purp
 
 # View logs
-sudo journalctl -u becauseimstuck -f
+sudo journalctl -u purp -f
 
 # Check nginx status
 sudo systemctl status nginx
@@ -324,9 +324,9 @@ sudo nginx -t
 - Verify SSH key permissions (should be 0600)
 
 #### 3. Application won't start
-- Check logs: `sudo journalctl -u becauseimstuck`
+- Check logs: `sudo journalctl -u purp`
 - Verify Python dependencies: `source .venv/bin/activate && pip list`
-- Check .env file: `cat /home/appuser/becauseimstuck/.env`
+- Check .env file: `cat /home/appuser/purp/.env`
 
 #### 4. Can't access application
 - Check security group allows inbound on port 80
@@ -383,6 +383,6 @@ terraform apply
 ## Support
 
 For issues or questions:
-- Check logs: `sudo journalctl -u becauseimstuck -f`
+- Check logs: `sudo journalctl -u purp -f`
 - Terraform docs: https://registry.terraform.io/
 - Ansible docs: https://docs.ansible.com/

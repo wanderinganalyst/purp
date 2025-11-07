@@ -1,4 +1,4 @@
-# BecauseImStuck
+# Purp
 
 ![Tests](https://github.com/wanderinganalyst/purp/workflows/Test%20Suite/badge.svg)
 ![Branch Protection](https://github.com/wanderinganalyst/purp/workflows/Branch%20Protection/badge.svg)
@@ -158,7 +158,7 @@ python3 migrate_bill_supports.py
 ## Project Structure
 
 ```
-becauseImstuck/
+purp/
 ├── main.py                     # Application entry point
 ├── models.py                   # Database models (User, Bill, Comment, Event, etc.)
 ├── extensions.py               # Flask extensions (SQLAlchemy, APScheduler)
@@ -229,7 +229,7 @@ Key configuration in `main.py`:
 
 ```python
 app.config['SECRET_KEY'] = 'your-secret-key'  # Change for production!
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/becauseimstuck.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/purp.db'
 ```
 
 For production:
@@ -246,10 +246,10 @@ If you encounter database errors:
 
 ```bash
 # Backup your current database (if needed)
-cp instance/becauseimstuck.db instance/becauseimstuck.db.backup
+cp instance/purp.db instance/purp.db.backup
 
 # Reinitialize the database
-rm instance/becauseimstuck.db
+rm instance/purp.db
 python3 init_db.py
 ```
 
@@ -297,10 +297,10 @@ Build the image and run the container (from the repository root):
 
 ```bash
 # build the image
-docker build -t becauseimstuck .
+docker build -t purp .
 
 # run the container (maps container port 5000 to host 5000)
-docker run --rm -p 5000:5000 becauseimstuck
+docker run --rm -p 5000:5000 purp
 ```
 
 Or use docker-compose:
@@ -471,7 +471,7 @@ Before deploying to production:
        }
 
        location /static {
-           alias /path/to/becauseimstuck/static;
+           alias /path/to/purp/static;
        }
    }
    ```

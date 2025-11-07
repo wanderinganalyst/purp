@@ -8,7 +8,7 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      IMAGE_NAME: becauseimstuck
+      IMAGE_NAME: purp
     steps:
       - uses: actions/checkout@v4
 
