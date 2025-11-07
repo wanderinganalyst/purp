@@ -111,9 +111,9 @@ def generate_draft():
         flash('Please provide a bill description.', 'error')
         return redirect(url_for('bill_drafting.draft_bill'))
     
-    # Generate prompt
+    # Generate bill draft using our AI
     try:
-        prompt, context_info = create_llm_bill_draft(
+        generated_bill, context_info = create_llm_bill_draft(
             topic=topic,
             description=description,
             topic_filter=topic_filter or None,
@@ -133,7 +133,7 @@ def generate_draft():
             user=user,
             topic=topic,
             description=description,
-            prompt=prompt,
+            generated_bill=generated_bill,
             context_info=context_info,
             additional_instructions=additional_instructions,
             all_reps=all_reps
