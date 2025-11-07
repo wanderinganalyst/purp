@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}AI Bill Drafting Assistant{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-robot"></i> AI Bill Drafting Assistant
+                </h1>
+                <div>
+                    <a href="{{ url_for('bill_drafting.statistics') }}" class="btn btn-info">
+                        <i class="fas fa-chart-bar"></i> View Statistics
+                    </a>
+                    <a href="{{ url_for('bill_drafting.browse_examples') }}" class="btn btn-secondary">
+                        <i class="fas fa-book"></i> Browse Examples
+                    </a>
+                </div>
+            </div>
+
+            <!-- Info Alert -->
+            <div class="alert alert-info">
+                <h5><i class="fas fa-info-circle"></i> How It Works</h5>
+                <p class="mb-2">
+                    This AI-powered tool helps you draft new bills by learning from Missouri's legislative history:
+                </p>
+                <ul class="mb-0">
+                    <li><strong>Passed Bills</strong> (✓ Positive Examples): The AI studies successful bills that were signed into law to learn effective language, structure, and approaches.</li>
+                    <li><strong>Failed Bills</strong> (✗ Negative Examples): The AI analyzes bills that were defeated or rejected to avoid problematic patterns.</li>
+                    <li>You'll receive a complete LLM prompt that you can use with ChatGPT, Claude, or other AI tools to generate your bill draft.</li>
+                </ul>
+            </div>
+
+            <!-- Current Database Statistics -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card border-success">
+                        <div class="card-body text-center">
+                            <h3 class="text-success">{{ stats.passed.count }}</h3>
+                            <p class="mb-0"><i class="fas fa-check-circle"></i> Passed Bills</p>
+                            <small class="text-muted">Available as positive examples</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-danger">
+                        <div class="card-body text-center">
+                            <h3 class="text-danger">{{ stats.failed.count }}</h3>
+                            <p class="mb-0"><i class="fas fa-times-circle"></i> Failed Bills</p>
+                            <small class="text-muted">Available as negative examples</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-primary">
+                        <div class="card-body text-center">
+                            <h3 class="text-primary">{{ stats.total_with_text }}</h3>
+                            <p class="mb-0"><i class="fas fa-file-alt"></i> Total Bills with Text</p>
+                            <small class="text-muted">In database</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bill Drafting Form -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-pen-fancy"></i> Draft a New Bill</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('bill_drafting.generate_draft') }}">
+                        
+                        <!-- Bill Topic -->
+                        <div class="mb-3">
+                            <label for="topic" class="form-label">
+                                <strong>Bill Topic/Title</strong> <span class="text-danger">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="topic" 
+                                name="topic"
+                                placeholder="e.g., Education Funding Reform"
+                                required
+                            >
+                            <small class="form-text text-muted">
+                                What is this bill about? Be concise and specific.
+                            </small>
+                        </div>
+
+                        <!-- Bill Description -->
+                        <div class="mb-3">
+                            <label for="description" class="form-label">
+                                <strong>Bill Objective/Description</strong> <span class="text-danger">*</span>
+                            </label>
+                            <textarea 
+                                class="form-control" 
+                                id="description" 
+                                name="description"
+                                rows="4"
+                                placeholder="Describe what you want this bill to accomplish. Be as detailed as possible about the goals, affected parties, and desired outcomes."
+                                required
+                            ></textarea>
+                            <small class="form-text text-muted">
+                                What should this bill accomplish? Who does it affect? What changes will it make?
+                            </small>
+                        </div>
+
+                        <!-- Topic Filter for Similar Bills -->
+                        <div class="mb-3">
+                            <label for="topic_filter" class="form-label">
+                                <strong>Filter for Similar Bills</strong> (Optional)
+                            </label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="topic_filter" 
+                                name="topic_filter"
+                                placeholder="e.g., education, tax, healthcare"
+                            >
+                            <small class="form-text text-muted">
+                                Enter keywords to find similar passed/failed bills. Leave blank to use all available bills.
+                            </small>
+                        </div>
+
+                        <!-- Additional Instructions -->
+                        <div class="mb-3">
+                            <label for="additional_instructions" class="form-label">
+                                <strong>Additional Requirements</strong> (Optional)
+                            </label>
+                            <textarea 
+                                class="form-control" 
+                                id="additional_instructions" 
+                                name="additional_instructions"
+                                rows="3"
+                                placeholder="Any specific requirements, formatting preferences, or constraints for the bill..."
+                            ></textarea>
+                            <small class="form-text text-muted">
+                                Specific clauses, fiscal considerations, effective dates, etc.
+                            </small>
+                        </div>
+
+                        <!-- Number of Examples -->
+                        <div class="mb-3">
+                            <label for="max_examples" class="form-label">
+                                <strong>Number of Example Bills</strong>
+                            </label>
+                            <select class="form-select" id="max_examples" name="max_examples">
+                                <option value="2">2 bills per category (Faster)</option>
+                                <option value="3" selected>3 bills per category (Recommended)</option>
+                                <option value="5">5 bills per category (More context)</option>
+                            </select>
+                            <small class="form-text text-muted">
+                                How many passed and failed bills to include as examples.
+                            </small>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-magic"></i> Generate Bill Draft Prompt
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+            <!-- Recent Successful Bills Preview -->
+            {% if stats.passed.bills %}
+            <div class="card mt-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-thumbs-up"></i> Recent Successful Bills</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for bill in stats.passed.bills %}
+                        <a href="{{ url_for('bills.bill_detail', bill_number=bill.bill_number) }}" 
+                           class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ bill.bill_number }}</h6>
+                                <small class="text-success">{{ bill.status }}</small>
+                            </div>
+                            <p class="mb-1">{{ bill.title or bill.description[:100] }}</p>
+                            <small class="text-muted">Sponsor: {{ bill.sponsor }}</small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-2">
+                        <a href="{{ url_for('bill_drafting.browse_examples', category='passed') }}" 
+                           class="btn btn-sm btn-outline-success">
+                            View All Passed Bills →
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Recent Failed Bills Preview -->
+            {% if stats.failed.bills %}
+            <div class="card mt-4 mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-thumbs-down"></i> Recent Failed Bills</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for bill in stats.failed.bills %}
+                        <a href="{{ url_for('bills.bill_detail', bill_number=bill.bill_number) }}" 
+                           class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ bill.bill_number }}</h6>
+                                <small class="text-danger">{{ bill.status }}</small>
+                            </div>
+                            <p class="mb-1">{{ bill.title or bill.description[:100] }}</p>
+                            <small class="text-muted">Sponsor: {{ bill.sponsor }}</small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-2">
+                        <a href="{{ url_for('bill_drafting.browse_examples', category='failed') }}" 
+                           class="btn btn-sm btn-outline-danger">
+                            View All Failed Bills →
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}

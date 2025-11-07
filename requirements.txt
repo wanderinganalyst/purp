@@ -6,3 +6,7 @@ beautifulsoup4>=4.12.2
 Flask-Migrate>=4.0.5
 requests>=2.31.0
 APScheduler>=3.10.4
+
+# PDF text extraction for bill text fetching
+pdfplumber>=0.10.0
+PyPDF2>=3.0.0

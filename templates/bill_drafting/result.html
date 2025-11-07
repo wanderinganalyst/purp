@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Bill Draft Generated{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            
+            <!-- Success Header -->
+            <div class="alert alert-success">
+                <h4><i class="fas fa-check-circle"></i> Bill Draft Prompt Generated!</h4>
+                <p class="mb-0">
+                    Your AI bill drafting prompt is ready. Copy it and paste into ChatGPT, Claude, or your preferred LLM.
+                </p>
+            </div>
+
+            <!-- Request Summary -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Your Request</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3">Topic:</dt>
+                        <dd class="col-sm-9">{{ topic }}</dd>
+                        
+                        <dt class="col-sm-3">Description:</dt>
+                        <dd class="col-sm-9">{{ description }}</dd>
+                        
+                        {% if additional_instructions %}
+                        <dt class="col-sm-3">Additional Requirements:</dt>
+                        <dd class="col-sm-9">{{ additional_instructions }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Context Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-database"></i> Training Context Used</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-success">
+                                <i class="fas fa-check-circle"></i> Passed Bills (Positive Examples)
+                            </h6>
+                            <p><strong>{{ context_info.passed_count }}</strong> bills included</p>
+                            {% if context_info.passed_bills %}
+                            <ul class="list-unstyled">
+                                {% for bill in context_info.passed_bills %}
+                                <li class="mb-2">
+                                    <strong>{{ bill.number }}</strong>: {{ bill.title }}<br>
+                                    <small class="text-muted">Status: {{ bill.status }}</small>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="text-muted">No passed bills found for this topic.</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-danger">
+                                <i class="fas fa-times-circle"></i> Failed Bills (Negative Examples)
+                            </h6>
+                            <p><strong>{{ context_info.failed_count }}</strong> bills included</p>
+                            {% if context_info.failed_bills %}
+                            <ul class="list-unstyled">
+                                {% for bill in context_info.failed_bills %}
+                                <li class="mb-2">
+                                    <strong>{{ bill.number }}</strong>: {{ bill.title }}<br>
+                                    <small class="text-muted">Status: {{ bill.status }}</small>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="text-muted">No failed bills found for this topic.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- The Generated Prompt -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-robot"></i> LLM Prompt (Copy & Paste)</h5>
+                        <button class="btn btn-sm btn-dark" onclick="copyPrompt()">
+                            <i class="fas fa-copy"></i> Copy to Clipboard
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <pre id="promptText" class="bg-light p-3" style="max-height: 600px; overflow-y: auto; font-size: 0.85em;">{{ prompt }}</pre>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb"></i> How to Use This Prompt</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Step 1: Choose Your LLM</h6>
+                    <ul>
+                        <li><strong>ChatGPT (OpenAI)</strong>: Visit <a href="https://chat.openai.com" target="_blank">chat.openai.com</a> - Best for complex drafting</li>
+                        <li><strong>Claude (Anthropic)</strong>: Visit <a href="https://claude.ai" target="_blank">claude.ai</a> - Best for long documents</li>
+                        <li><strong>Local AI</strong>: Use Ollama with Llama 2 or Mistral - Best for privacy</li>
+                    </ul>
+
+                    <h6>Step 2: Copy the Prompt</h6>
+                    <p>Click the "Copy to Clipboard" button above to copy the entire prompt.</p>
+
+                    <h6>Step 3: Paste and Generate</h6>
+                    <p>Paste the prompt into your chosen LLM and let it generate your bill draft.</p>
+
+                    <h6>Step 4: Review and Refine</h6>
+                    <p>The AI will provide a draft bill. Review it carefully and ask for revisions if needed:</p>
+                    <ul>
+                        <li>"Make the language more concise"</li>
+                        <li>"Add a section about fiscal impact"</li>
+                        <li>"Revise the effective date to be 90 days after enactment"</li>
+                    </ul>
+
+                    <h6>Step 5: Legal Review</h6>
+                    <p class="text-warning">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Important:</strong> 
+                        Always have AI-generated bills reviewed by legal counsel before introduction.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Save Draft Section -->
+            <div class="card mb-4 border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-save"></i> Save AI-Generated Bill as Draft</h5>
+                </div>
+                <div class="card-body">
+                    <p>After getting your bill draft from the LLM, paste it here to save it to your workspace. You can control who sees it and get feedback from constituents and staff.</p>
+                    
+                    <form method="POST" action="{{ url_for('bill_drafting.save_draft') }}">
+                        <input type="hidden" name="llm_prompt" value="{{ prompt }}">
+                        
+                        <div class="mb-3">
+                            <label for="draft_title" class="form-label">Bill Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="draft_title" name="title" 
+                                   value="{{ topic }}" required>
+                            <small class="text-muted">This will be the title of your draft bill</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="draft_description" class="form-label">Description</label>
+                            <textarea class="form-control" id="draft_description" name="description" rows="2">{{ description }}</textarea>
+                            <small class="text-muted">Optional summary of what this bill does</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="draft_content" class="form-label">Bill Content (Paste from LLM) <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="draft_content" name="content" rows="10" 
+                                      placeholder="Paste the AI-generated bill text here..." required></textarea>
+                            <small class="text-muted">Paste the complete bill text generated by ChatGPT, Claude, or your LLM</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="draft_topic" class="form-label">Topic Tag</label>
+                            <input type="text" class="form-control" id="draft_topic" name="topic" 
+                                   value="{{ context_info.topic_filter if context_info.topic_filter else '' }}">
+                            <small class="text-muted">Optional topic for organization</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="draft_visibility" class="form-label">Visibility <span class="text-danger">*</span></label>
+                            <select class="form-select" id="draft_visibility" name="visibility" required>
+                                <option value="hidden" selected>🔒 Hidden - Only you and staff can see</option>
+                                <option value="constituents">👥 Constituents - Your constituents can see and comment</option>
+                                <option value="public">🌎 Public - Everyone can see and comment</option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-save me-2"></i>Save as Draft Bill
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-between mb-4">
+                <a href="{{ url_for('bill_drafting.draft_bill') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Draft Another Bill
+                </a>
+                <div>
+                    <a href="{{ url_for('bill_drafting.workspace') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-briefcase me-1"></i>View Workspace
+                    </a>
+                    <button class="btn btn-success" onclick="copyPrompt()">
+                        <i class="fas fa-copy"></i> Copy Prompt
+                    </button>
+                    <a href="https://chat.openai.com" target="_blank" class="btn btn-primary">
+                        <i class="fas fa-external-link-alt"></i> Open ChatGPT
+                    </a>
+                    <a href="https://claude.ai" target="_blank" class="btn btn-info">
+                        <i class="fas fa-external-link-alt"></i> Open Claude
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+function copyPrompt() {
+    const promptText = document.getElementById('promptText').textContent;
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(promptText).then(function() {
+        // Show success message
+        const btn = event.target.closest('button');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        btn.classList.remove('btn-dark', 'btn-success');
+        btn.classList.add('btn-success');
+        
+        setTimeout(function() {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-dark');
+        }, 2000);
+    }, function(err) {
+        alert('Failed to copy: ' + err);
+    });
+}
+</script>
+{% endblock %}

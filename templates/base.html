@@ -331,6 +331,7 @@
 
         <!-- Right Sidebar -->
         <div class="col-md-2 sidebar">
+          
           <!-- Bills Section -->
           <div class="mb-4">
             <h5><i class="bi bi-file-text-fill"></i> Bills</h5>
@@ -338,10 +339,21 @@
               <a class="nav-link" href="{{ url_for('bills.bills_list') }}">
                 <i class="bi bi-list-ul"></i> All Bills
               </a>
+              {% if session.get('role') == 'rep' %}
+              <a class="nav-link" href="{{ url_for('bill_drafting.draft_bill') }}">
+                <i class="bi bi-robot"></i> AI Bill Drafting
+              </a>
+              <a class="nav-link" href="{{ url_for('bill_drafting.workspace') }}">
+                <i class="bi bi-briefcase"></i> Draft Workspace
+              </a>
+              {% endif %}
+              {% if session.get('role') == 'staffer' %}
+              <a class="nav-link" href="{{ url_for('bill_drafting.workspace') }}">
+                <i class="bi bi-briefcase"></i> Draft Workspace
+              </a>
+              {% endif %}
             </nav>
-          </div>
-
-          <div class="section-divider"></div>
+          </div>          <div class="section-divider"></div>
 
           <!-- Representatives Section -->
           <div class="mb-4">

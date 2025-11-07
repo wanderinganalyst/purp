@@ -41,14 +41,47 @@ class ProductionConfig(Config):
     """Production configuration."""
     DEBUG = False
     TESTING = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     
-    # Ensure these are set in production
-    def __init__(self):
-        if not self.SECRET_KEY:
-            raise ValueError("No SECRET_KEY set for production")
-        if not self.SQLALCHEMY_DATABASE_URI:
-            raise ValueError("No DATABASE_URL set for production")
+    # Database - Must use PostgreSQL in production
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_size': 10,
+        'pool_recycle': 3600,
+        'pool_pre_ping': True,
+    }
+    
+    # Security
+    SESSION_COOKIE_SECURE = True  # HTTPS only
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=12)
+    
+    # Performance
+    SEND_FILE_MAX_AGE_DEFAULT = 31536000  # 1 year for static files
+    
+    # Logging
+    LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
+    LOG_FILE = os.environ.get('LOG_FILE', '/var/log/purp/app.log')
+    
+    # Validate required settings
+    @classmethod
+    def validate(cls):
+        """Validate production configuration."""
+        errors = []
+        
+        if not os.environ.get('SECRET_KEY') or os.environ.get('SECRET_KEY') == 'dev-secret-key':
+            errors.append("SECRET_KEY must be set to a secure random value")
+        
+        if not os.environ.get('DATABASE_URL'):
+            errors.append("DATABASE_URL must be set")
+        
+        if not os.environ.get('DATABASE_URL', '').startswith('postgresql'):
+            errors.append("Production must use PostgreSQL database")
+        
+        if errors:
+            raise ValueError("Production configuration errors:\n" + "\n".join(f"  - {e}" for e in errors))
+        
+        return True
 
 config = {
     'development': DevelopmentConfig,

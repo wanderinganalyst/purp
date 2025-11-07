@@ -52,7 +52,7 @@ def rep_detail(district):
         sc = get_member_sponsorships(r.district)
         
         # Get all bills to enrich with titles
-        from models import Bill, Event
+        from models import Bill, Event, DraftBill
         from utils.data_fetcher import get_data_fetcher
         from datetime import datetime
         
@@ -60,6 +60,26 @@ def rep_detail(district):
         events = Event.query.filter_by(representative_id=r.id).filter(
             Event.event_date >= datetime.now()
         ).order_by(Event.event_date.asc()).all()
+        
+        # Get draft bills visible to current user
+        draft_bills = []
+        try:
+            # Get user if logged in
+            user_id = session.get('user_id')
+            current_user = User.query.get(user_id) if user_id else None
+            
+            # Get all drafts for this rep and filter by visibility
+            all_drafts = DraftBill.query.filter_by(representative_id=r.id).order_by(
+                DraftBill.updated_at.desc()
+            ).all()
+            
+            for draft in all_drafts:
+                if draft.can_view(current_user):
+                    draft_bills.append(draft)
+        except Exception as e:
+            # If there's any error, just don't show drafts
+            print(f"Error loading draft bills: {e}")
+            draft_bills = []
         
         # Try to get bills from database or cache
         all_bills = {}
@@ -147,7 +167,7 @@ def rep_detail(district):
             rep['candidate_users'] = candidates_data
         except Exception:
             rep['candidate_users'] = []
-        return render_template('rep_detail.html', rep=rep)
+        return render_template('rep_detail.html', rep=rep, draft_bills=draft_bills)
 
     # Fallback: Try to find in scraped data by district (with normalization)
     from services.representatives import get_all_reps

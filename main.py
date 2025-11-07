@@ -55,6 +55,9 @@ def create_app(config_name='default'):
     from routes.profile import profile_bp
     app.register_blueprint(profile_bp)
     
+    from routes.bill_drafting import bill_drafting_bp
+    app.register_blueprint(bill_drafting_bp)
+    
     # Error handlers
     @app.errorhandler(404)
     def not_found_error(error):

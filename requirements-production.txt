@@ -1,0 +1,27 @@
+# Production Requirements
+# Install with: pip install -r requirements-production.txt
+
+# Base requirements (from requirements.txt)
+Flask>=2.0,<3.0
+Flask-SQLAlchemy>=3.0
+Flask-Migrate>=4.0.5
+beautifulsoup4>=4.12.2
+requests>=2.31.0
+APScheduler>=3.10.4
+
+# Production server
+gunicorn>=20.1.0
+
+# PostgreSQL driver
+psycopg2-binary>=2.9
+
+# Security & monitoring
+python-dotenv>=1.0.0
+sentry-sdk[flask]>=1.40.0
+
+# Performance
+redis>=5.0.0
+flask-caching>=2.1.0
+
+# Logging
+python-json-logger>=2.0.0

@@ -249,6 +249,69 @@
       </div>
     </div>
 
+    <!-- Draft Bills Section (visible to constituents/public) -->
+    {% if draft_bills and draft_bills|length > 0 %}
+    <div class="card shadow-sm mb-4" style="border-left:4px solid var(--accent-purple)">
+      <div class="card-header" style="background: var(--pale-purple);">
+        <h5 class="mb-0" style="color: var(--deep-purple);">
+          <i class="bi bi-file-earmark-text"></i> Bills in Development
+        </h5>
+        <small class="text-muted">Draft bills your representative is working on - share your feedback!</small>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          {% for draft in draft_bills %}
+            <div class="col-md-6">
+              <div class="card h-100 {% if draft.visibility == 'public' %}border-success{% else %}border-info{% endif %}">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="card-title mb-0">{{ draft.title }}</h6>
+                    {% if draft.visibility == 'public' %}
+                      <span class="badge bg-success" title="Visible to everyone">🌎 Public</span>
+                    {% else %}
+                      <span class="badge bg-info" title="Visible to constituents">👥 Constituents</span>
+                    {% endif %}
+                  </div>
+                  
+                  {% if draft.description %}
+                    <p class="card-text small text-muted mb-2">
+                      {{ draft.description[:150] }}{% if draft.description|length > 150 %}...{% endif %}
+                    </p>
+                  {% endif %}
+                  
+                  {% if draft.topic %}
+                    <div class="mb-2">
+                      <span class="badge bg-secondary">{{ draft.topic }}</span>
+                    </div>
+                  {% endif %}
+                  
+                  <div class="d-flex justify-content-between align-items-center mt-2">
+                    <small class="text-muted">
+                      <i class="bi bi-chat-dots"></i> {{ draft.comments.count() }} comment{% if draft.comments.count() != 1 %}s{% endif %}
+                    </small>
+                    <a href="{{ url_for('bill_drafting.view_draft', draft_id=draft.id) }}" class="btn btn-sm btn-outline-primary">
+                      View & Comment <i class="bi bi-arrow-right"></i>
+                    </a>
+                  </div>
+                  
+                  <small class="text-muted d-block mt-2">
+                    <i class="bi bi-clock"></i> Last updated {{ draft.updated_at.strftime('%b %d, %Y') if draft.updated_at else 'recently' }}
+                  </small>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        
+        {% if draft_bills|length == 0 %}
+          <p class="text-muted mb-0 text-center py-3">
+            <i class="bi bi-info-circle"></i> No draft bills currently shared.
+          </p>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
     <!-- Bills Passed and Failed Section -->
     {% set passed_bills = [] %}
     {% set failed_bills = [] %}

@@ -9,10 +9,13 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(50), nullable=False, default='regular')  # regular, power, rep
+    role = db.Column(db.String(50), nullable=False, default='regular')  # regular, power, rep, staffer
     
     # For rep users: link to their Representative record
     representative_id = db.Column(db.Integer, db.ForeignKey('representatives.id'), nullable=True)
+    
+    # For staffer users: link to the representative they work for
+    rep_boss_id = db.Column(db.Integer, db.ForeignKey('representatives.id'), nullable=True)
     
     # Address fields
     street_address = db.Column(db.String(255), nullable=False)
@@ -37,6 +40,9 @@ class User(db.Model):
     
     # Relationship to Representative (for rep users)
     rep_profile = db.relationship('Representative', backref='user_account', foreign_keys=[representative_id])
+    
+    # Relationship to Representative (for staffer users)
+    rep_boss = db.relationship('Representative', backref='staffers', foreign_keys=[rep_boss_id])
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
@@ -112,6 +118,13 @@ class Bill(db.Model):
     description = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(50), nullable=True, default='Active')
     last_action = db.Column(db.String(255), nullable=True)
+    
+    # Full bill text for LLM processing
+    full_text = db.Column(db.Text, nullable=True)
+    text_pdf_url = db.Column(db.String(500), nullable=True)
+    summary_pdf_url = db.Column(db.String(500), nullable=True)
+    text_fetched_at = db.Column(db.DateTime, nullable=True)
+    
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
 
@@ -127,8 +140,40 @@ class Bill(db.Model):
             'last_action': self.last_action,
             'support_count': getattr(self, 'support_count', None),
             'oppose_count': getattr(self, 'oppose_count', None),
-            'score': (getattr(self, 'support_count', 0) or 0) - (getattr(self, 'oppose_count', 0) or 0)
+            'score': (getattr(self, 'support_count', 0) or 0) - (getattr(self, 'oppose_count', 0) or 0),
+            'has_full_text': bool(self.full_text),
+            'text_pdf_url': self.text_pdf_url,
+            'summary_pdf_url': self.summary_pdf_url,
         }
+    
+    def get_llm_context(self, max_length=None):
+        """Get bill text formatted for LLM processing.
+        
+        Args:
+            max_length: Optional max characters to return (for context length limits)
+            
+        Returns:
+            Formatted string with bill metadata and full text
+        """
+        context = f"""Bill: {self.bill_number}
+Title: {self.title or 'No title'}
+Sponsor: {self.sponsor or 'Unknown'}
+Status: {self.status or 'Unknown'}
+Last Action: {self.last_action or 'None'}
+
+"""
+        if self.description:
+            context += f"Description:\n{self.description}\n\n"
+        
+        if self.full_text:
+            context += f"Full Bill Text:\n{self.full_text}\n"
+        else:
+            context += "Full Bill Text: Not yet fetched\n"
+        
+        if max_length and len(context) > max_length:
+            context = context[:max_length] + "\n... [truncated]"
+        
+        return context
 
     def __repr__(self):
         return f"<Bill {self.bill_number}>"
@@ -409,3 +454,96 @@ class EventCartItem(db.Model):
     
     def __repr__(self):
         return f"<EventPurchase {self.id}: User {self.user_id} bought {self.quantity}x {self.option.option_name}>"
+
+
+class DraftBill(db.Model):
+    """
+    Bills in draft/working state created by representatives using AI bill drafting.
+    Representatives can control visibility and constituents/staffers can view/comment.
+    """
+    __tablename__ = 'draft_bills'
+    id = db.Column(db.Integer, primary_key=True)
+    representative_id = db.Column(db.Integer, db.ForeignKey('representatives.id'), nullable=False, index=True)
+    title = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    content = db.Column(db.Text, nullable=False)  # The actual bill text/draft
+    
+    # Visibility control
+    # 'hidden' = only rep and staffers can see
+    # 'constituents' = rep's constituents can see
+    # 'public' = everyone can see
+    visibility = db.Column(db.String(20), nullable=False, default='hidden')
+    
+    # Optional metadata from AI generation
+    topic = db.Column(db.String(100), nullable=True)
+    llm_prompt_used = db.Column(db.Text, nullable=True)  # Store the prompt that generated this
+    based_on_bills = db.Column(db.Text, nullable=True)  # JSON list of bill_numbers used as examples
+    
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
+    
+    representative = db.relationship('Representative', backref=db.backref('draft_bills', lazy='dynamic', cascade='all, delete-orphan'))
+    
+    def can_view(self, user):
+        """Check if a user can view this draft bill."""
+        if not user:
+            return self.visibility == 'public'
+        
+        # Rep and their staffers can always see
+        if user.representative_id == self.representative_id:
+            return True
+        
+        if user.role == 'staffer' and user.rep_boss_id == self.representative_id:
+            return True
+        
+        # Public drafts are visible to all
+        if self.visibility == 'public':
+            return True
+        
+        # Constituent-visible drafts
+        if self.visibility == 'constituents':
+            # Check if user's representative matches
+            if user.representative_district == self.representative.district:
+                return True
+        
+        return False
+    
+    def to_dict(self):
+        """Convert to dictionary for API/template rendering."""
+        return {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'content': self.content,
+            'visibility': self.visibility,
+            'topic': self.topic,
+            'representative': {
+                'id': self.representative.id,
+                'name': self.representative.name,
+                'district': self.representative.district,
+            },
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'comment_count': self.comments.count() if hasattr(self, 'comments') else 0,
+        }
+    
+    def __repr__(self):
+        return f"<DraftBill {self.id}: {self.title} ({self.visibility})>"
+
+
+class DraftBillComment(db.Model):
+    """Comments on draft bills - can be from constituents or staffers."""
+    __tablename__ = 'draft_bill_comments'
+    id = db.Column(db.Integer, primary_key=True)
+    draft_bill_id = db.Column(db.Integer, db.ForeignKey('draft_bills.id'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    comment_text = db.Column(db.Text, nullable=False)
+    is_staffer = db.Column(db.Boolean, nullable=False, default=False)  # True if comment from staffer
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
+    
+    draft_bill = db.relationship('DraftBill', backref=db.backref('comments', lazy='dynamic', cascade='all, delete-orphan', order_by='DraftBillComment.created_at'))
+    user = db.relationship('User', backref=db.backref('draft_comments', lazy='dynamic'))
+    
+    def __repr__(self):
+        return f"<DraftBillComment {self.id} on DraftBill {self.draft_bill_id}>"

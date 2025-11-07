@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Bill Drafting Statistics{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-chart-bar"></i> Bill Drafting Statistics</h1>
+                <a href="{{ url_for('bill_drafting.draft_bill') }}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Back to Drafting
+                </a>
+            </div>
+
+            <!-- Overall Statistics -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center border-success">
+                        <div class="card-body">
+                            <h2 class="text-success">{{ stats.passed.count }}</h2>
+                            <p class="mb-0">Passed Bills</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center border-danger">
+                        <div class="card-body">
+                            <h2 class="text-danger">{{ stats.failed.count }}</h2>
+                            <p class="mb-0">Failed Bills</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center border-warning">
+                        <div class="card-body">
+                            <h2 class="text-warning">{{ stats.active.count }}</h2>
+                            <p class="mb-0">Active Bills</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center border-primary">
+                        <div class="card-body">
+                            <h2 class="text-primary">{{ stats.total_with_text }}</h2>
+                            <p class="mb-0">Total with Text</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Passed Bills Analysis -->
+            {% if stats.passed.analysis.count > 0 %}
+            <div class="card mb-4 border-success">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-check-circle"></i> Passed Bills Analysis</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Top Sponsors</h5>
+                            <ul class="list-group">
+                                {% for sponsor, count in stats.passed.analysis.common_sponsors %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ sponsor }}
+                                    <span class="badge bg-success rounded-pill">{{ count }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Common Topics/Words</h5>
+                            <ul class="list-group">
+                                {% for word, count in stats.passed.analysis.common_words[:8] %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ word }}
+                                    <span class="badge bg-success rounded-pill">{{ count }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <p><strong>Average Bill Length:</strong> {{ stats.passed.analysis.avg_length|int }} words</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Failed Bills Analysis -->
+            {% if stats.failed.analysis.count > 0 %}
+            <div class="card mb-4 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="fas fa-times-circle"></i> Failed Bills Analysis</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Top Sponsors</h5>
+                            <ul class="list-group">
+                                {% for sponsor, count in stats.failed.analysis.common_sponsors %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ sponsor }}
+                                    <span class="badge bg-danger rounded-pill">{{ count }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Common Topics/Words</h5>
+                            <ul class="list-group">
+                                {% for word, count in stats.failed.analysis.common_words[:8] %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ word }}
+                                    <span class="badge bg-danger rounded-pill">{{ count }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <p><strong>Average Bill Length:</strong> {{ stats.failed.analysis.avg_length|int }} words</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Insights -->
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0"><i class="fas fa-lightbulb"></i> Key Insights</h4>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        {% if stats.passed.count > 0 and stats.failed.count > 0 %}
+                        <li>
+                            <strong>Success Rate:</strong> 
+                            {{ (stats.passed.count / (stats.passed.count + stats.failed.count) * 100)|round(1) }}% 
+                            of decided bills passed
+                        </li>
+                        {% endif %}
+                        
+                        {% if stats.passed.analysis.avg_length and stats.failed.analysis.avg_length %}
+                        <li>
+                            <strong>Length Comparison:</strong>
+                            Passed bills average {{ stats.passed.analysis.avg_length|int }} words,
+                            failed bills average {{ stats.failed.analysis.avg_length|int }} words
+                            {% if stats.passed.analysis.avg_length < stats.failed.analysis.avg_length %}
+                            (Passed bills tend to be more concise)
+                            {% endif %}
+                        </li>
+                        {% endif %}
+                        
+                        <li>
+                            <strong>Data Coverage:</strong> 
+                            {{ stats.total_with_text }} bills have full text available for AI analysis
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

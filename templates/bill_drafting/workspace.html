@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Draft Bill Workspace{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-briefcase me-2"></i>Draft Bill Workspace</h1>
+        <div>
+            <a href="{{ url_for('bill_drafting.draft_bill') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Create New Draft
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h6 class="card-title">Total Drafts</h6>
+                    <h2 class="mb-0">{{ stats.total_drafts }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-secondary">
+                <div class="card-body">
+                    <h6 class="card-title">Hidden</h6>
+                    <h2 class="mb-0">{{ stats.hidden_count }}</h2>
+                    <small>Private drafts</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h6 class="card-title">Constituents</h6>
+                    <h2 class="mb-0">{{ stats.constituents_count }}</h2>
+                    <small>Visible to your constituents</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h6 class="card-title">Public</h6>
+                    <h2 class="mb-0">{{ stats.public_count }}</h2>
+                    <small>Visible to everyone</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Drafts List -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Your Draft Bills</h5>
+        </div>
+        <div class="card-body">
+            {% if drafts %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Topic</th>
+                                <th>Visibility</th>
+                                <th>Comments</th>
+                                <th>Last Updated</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for draft in drafts %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('bill_drafting.view_draft', draft_id=draft.id) }}" class="text-decoration-none">
+                                        <strong>{{ draft.title }}</strong>
+                                    </a>
+                                    {% if draft.description %}
+                                        <br><small class="text-muted">{{ draft.description[:100] }}{% if draft.description|length > 100 %}...{% endif %}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if draft.topic %}
+                                        <span class="badge bg-secondary">{{ draft.topic }}</span>
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <select class="form-select form-select-sm visibility-selector" 
+                                            data-draft-id="{{ draft.id }}"
+                                            onchange="updateVisibility({{ draft.id }}, this.value)">
+                                        <option value="hidden" {% if draft.visibility == 'hidden' %}selected{% endif %}>
+                                            🔒 Hidden
+                                        </option>
+                                        <option value="constituents" {% if draft.visibility == 'constituents' %}selected{% endif %}>
+                                            👥 Constituents
+                                        </option>
+                                        <option value="public" {% if draft.visibility == 'public' %}selected{% endif %}>
+                                            🌎 Public
+                                        </option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ draft.comments.count() }}</span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ draft.updated_at.strftime('%b %d, %Y %I:%M %p') if draft.updated_at else 'N/A' }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ url_for('bill_drafting.view_draft', draft_id=draft.id) }}" 
+                                           class="btn btn-outline-primary" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-danger" 
+                                                onclick="deleteDraft({{ draft.id }}, '{{ draft.title }}')" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No draft bills yet</h5>
+                    <p class="text-muted">Create your first draft bill using the AI bill drafting tool.</p>
+                    <a href="{{ url_for('bill_drafting.draft_bill') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Create New Draft
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Info Box -->
+    <div class="alert alert-info mt-4">
+        <h6><i class="fas fa-info-circle me-1"></i>Visibility Settings</h6>
+        <ul class="mb-0">
+            <li><strong>Hidden:</strong> Only you and your staff can see this draft</li>
+            <li><strong>Constituents:</strong> Your constituents can see and comment on this draft</li>
+            <li><strong>Public:</strong> Anyone can see and comment on this draft</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the draft bill "<span id="deleteDraftTitle"></span>"?</p>
+                <p class="text-danger"><small><i class="fas fa-exclamation-triangle"></i> This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Delete Draft</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateVisibility(draftId, visibility) {
+    fetch(`/draft-bill/${draftId}/visibility`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ visibility: visibility })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success toast/notification
+            const toast = document.createElement('div');
+            toast.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3';
+            toast.style.zIndex = '9999';
+            toast.innerHTML = `
+                Visibility updated to ${visibility}!
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        } else {
+            alert('Error updating visibility: ' + data.error);
+            location.reload();
+        }
+    })
+    .catch(error => {
+        alert('Error updating visibility');
+        location.reload();
+    });
+}
+
+function deleteDraft(draftId, title) {
+    document.getElementById('deleteDraftTitle').textContent = title;
+    document.getElementById('deleteForm').action = `/draft-bill/${draftId}/delete`;
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>
+{% endblock %}
