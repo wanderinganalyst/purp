@@ -6,6 +6,7 @@ Primary source: Member Roster (by session/year):
 Fallback source: Member Grid (cluster view):
   https://house.mo.gov/MemberGridCluster.aspx
 """
+from typing import Optional, List, Dict, Tuple
 from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
 from bs4 import BeautifulSoup
@@ -18,7 +19,7 @@ GRID_URL = "https://house.mo.gov/MemberGridCluster.aspx"
 
 HEADERS = {'User-Agent': 'Mozilla/5.0 (compatible; RepSync/1.0)'}
 
-def fetch_html(url: str) -> str | None:
+def fetch_html(url: str) -> Optional[str]:
     try:
         req = Request(url, headers=HEADERS)
         with urlopen(req, timeout=20) as resp:
@@ -28,12 +29,12 @@ def fetch_html(url: str) -> str | None:
         return None
 
 
-def parse_from_roster(html: str) -> list[dict]:
+def parse_from_roster(html: str) -> List[Dict]:
     """Attempt to parse reps from the MemberRoster page.
     We look for tables with rows containing District/Party and a name split.
     Returns a list of dicts with keys: district, first_name, last_name, party, city, phone, room.
     """
-    reps: list[dict] = []
+    reps: List[Dict] = []
     soup = BeautifulSoup(html, 'html.parser')
 
     # Generic approach: scan all rows, detect at least district/party columns.
@@ -96,9 +97,9 @@ def parse_from_roster(html: str) -> list[dict]:
     return reps
 
 
-def parse_from_grid(html: str) -> list[dict]:
+def parse_from_grid(html: str) -> List[Dict]:
     """Parse from MemberGridCluster.aspx known structure (8 columns)."""
-    reps: list[dict] = []
+    reps: List[Dict] = []
     soup = BeautifulSoup(html, 'html.parser')
     for tr in soup.find_all('tr'):
         tds = tr.find_all('td')
@@ -126,7 +127,7 @@ def parse_from_grid(html: str) -> list[dict]:
     return reps
 
 
-def upsert_representatives(reps: list[dict]) -> tuple[int,int]:
+def upsert_representatives(reps: List[Dict]) -> Tuple[int, int]:
     added = 0
     updated = 0
     for r in reps:

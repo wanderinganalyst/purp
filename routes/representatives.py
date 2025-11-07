@@ -79,6 +79,7 @@ def rep_detail(district):
         
         # Compose display lists with enriched data
         sponsored = []
+        sponsored_with_status = []
         cosponsored = []
         if sc.get('sponsored'):
             for num in sc['sponsored']:
@@ -87,6 +88,14 @@ def rep_detail(district):
                     'number': num,
                     'id': num,
                     'title': bill_data.get('title') or bill_data.get('description')
+                })
+                # Also create version with full status info for track record
+                sponsored_with_status.append({
+                    'number': num,
+                    'id': num,
+                    'title': bill_data.get('title') or bill_data.get('description'),
+                    'status': bill_data.get('status'),
+                    'last_action': bill_data.get('last_action')
                 })
         if sc.get('cosponsored'):
             for num in sc['cosponsored']:
@@ -105,6 +114,7 @@ def rep_detail(district):
             'phone': r.phone,
             'room': r.room,
             'sponsored_bills': sponsored,
+            'sponsored_bills_with_status': sponsored_with_status,
             'cosponsored_bills': cosponsored,
             'events': events
         }

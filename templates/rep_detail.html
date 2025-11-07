@@ -191,7 +191,7 @@
       </div>
     {% endif %}
 
-    <div class="row g-3"
+    <div class="row g-3">
       <div class="col-md-6">
         <div class="card shadow-sm h-100">
           <div class="card-header" style="background: linear-gradient(90deg, var(--pale-purple), #fff)">
@@ -202,7 +202,7 @@
               <div class="list-group">
                 {% for bill in rep.sponsored_bills %}
                   {% set num = bill.number if bill.number else (bill.id if bill.id else bill) %}
-                  <a class="list-group-item list-group-item-action" href="{{ url_for('bills.bill_detail', bill_id=num) }}">
+                  <a class="list-group-item list-group-item-action" href="{{ url_for('bills.bill_detail', bill_id=num|replace(' ', '')) }}">
                     <div class="d-flex justify-content-between align-items-center">
                       <strong style="color: var(--deep-purple);">{{ num }}</strong>
                       <i class="bi bi-chevron-right" style="color: var(--accent-purple);"></i>
@@ -230,7 +230,7 @@
               <div class="list-group">
                 {% for bill in rep.cosponsored_bills %}
                   {% set num = bill.number if bill.number else (bill.id if bill.id else bill) %}
-                  <a class="list-group-item list-group-item-action" href="{{ url_for('bills.bill_detail', bill_id=num) }}">
+                  <a class="list-group-item list-group-item-action" href="{{ url_for('bills.bill_detail', bill_id=num|replace(' ', '')) }}">
                     <div class="d-flex justify-content-between align-items-center">
                       <strong style="color: var(--deep-purple);">{{ num }}</strong>
                       <i class="bi bi-chevron-right" style="color: var(--accent-purple);"></i>
@@ -250,6 +250,19 @@
     </div>
 
     <!-- Bills Passed and Failed Section -->
+    {% set passed_bills = [] %}
+    {% set failed_bills = [] %}
+    {% if rep.sponsored_bills_with_status %}
+      {% for bill in rep.sponsored_bills_with_status %}
+        {% if bill.status and (bill.status|lower in ['signed', 'enacted', 'truly agreed to and finally passed', 'delivered to governor', 'approved by governor']) %}
+          {% set _ = passed_bills.append(bill) %}
+        {% elif bill.status and (bill.status|lower in ['defeated', 'rejected', 'voted do not pass', 'tabled', 'failed']) %}
+          {% set _ = failed_bills.append(bill) %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    {% if rep.sponsored_bills_with_status %}
     <div class="row g-3 mt-3">
       <div class="col-12">
         <h4 class="mb-3" style="color: var(--royal-purple);">
@@ -264,53 +277,39 @@
             <h5 class="mb-0 text-success"><i class="bi bi-check-circle-fill"></i> Bills Passed</h5>
           </div>
           <div class="card-body">
-            <div class="list-group">
-              <!-- Mock data for demonstration -->
-              <div class="list-group-item">
-                <div class="d-flex justify-content-between align-items-start">
-                  <div>
-                    <strong style="color: var(--deep-purple);">HB 123</strong>
-                    <p class="mb-1 small">Education Funding Reform Act</p>
-                    <small class="text-muted">
-                      <i class="bi bi-calendar-check"></i> Passed: March 15, 2025
-                    </small>
-                  </div>
-                  <span class="badge bg-success">Signed</span>
-                </div>
+            {% if passed_bills %}
+              <div class="list-group">
+                {% for bill in passed_bills[:10] %}
+                  <a href="{{ url_for('bills.bill_detail', bill_id=bill.number) }}" class="list-group-item list-group-item-action">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div class="flex-grow-1">
+                        <strong style="color: var(--deep-purple);">{{ bill.number }}</strong>
+                        {% if bill.title %}
+                          <p class="mb-1 small">{{ bill.title[:100] }}{% if bill.title|length > 100 %}...{% endif %}</p>
+                        {% endif %}
+                        {% if bill.last_action %}
+                          <small class="text-muted">
+                            <i class="bi bi-calendar-check"></i> {{ bill.last_action[:80] }}{% if bill.last_action|length > 80 %}...{% endif %}
+                          </small>
+                        {% endif %}
+                      </div>
+                      <span class="badge bg-success ms-2">{{ bill.status }}</span>
+                    </div>
+                  </a>
+                {% endfor %}
               </div>
-              
-              <div class="list-group-item">
-                <div class="d-flex justify-content-between align-items-start">
-                  <div>
-                    <strong style="color: var(--deep-purple);">HB 456</strong>
-                    <p class="mb-1 small">Infrastructure Improvement Initiative</p>
-                    <small class="text-muted">
-                      <i class="bi bi-calendar-check"></i> Passed: February 8, 2025
-                    </small>
-                  </div>
-                  <span class="badge bg-success">Enacted</span>
+              {% if passed_bills|length > 10 %}
+                <div class="mt-3 text-center">
+                  <small class="text-muted">
+                    <i class="bi bi-info-circle"></i> Showing 10 of {{ passed_bills|length }} passed bills
+                  </small>
                 </div>
-              </div>
-
-              <div class="list-group-item">
-                <div class="d-flex justify-content-between align-items-start">
-                  <div>
-                    <strong style="color: var(--deep-purple);">HB 789</strong>
-                    <p class="mb-1 small">Small Business Tax Relief</p>
-                    <small class="text-muted">
-                      <i class="bi bi-calendar-check"></i> Passed: January 22, 2025
-                    </small>
-                  </div>
-                  <span class="badge bg-success">Law</span>
-                </div>
-              </div>
-            </div>
-            
-            <div class="mt-3 text-center">
-              <small class="text-muted">
-                <i class="bi bi-info-circle"></i> Showing recent passed legislation
-              </small>
-            </div>
+              {% endif %}
+            {% else %}
+              <p class="text-muted mb-0">
+                <i class="bi bi-info-circle"></i> No bills passed into law yet.
+              </p>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -322,57 +321,44 @@
             <h5 class="mb-0 text-danger"><i class="bi bi-x-circle-fill"></i> Bills Not Passed</h5>
           </div>
           <div class="card-body">
-            <div class="list-group">
-              <!-- Mock data for demonstration -->
-              <div class="list-group-item">
-                <div class="d-flex justify-content-between align-items-start">
-                  <div>
-                    <strong style="color: var(--deep-purple);">HB 234</strong>
-                    <p class="mb-1 small">Healthcare Expansion Amendment</p>
-                    <small class="text-muted">
-                      <i class="bi bi-calendar-x"></i> Failed: April 3, 2025
-                    </small>
-                  </div>
-                  <span class="badge bg-danger">Defeated</span>
-                </div>
+            {% if failed_bills %}
+              <div class="list-group">
+                {% for bill in failed_bills[:10] %}
+                  <a href="{{ url_for('bills.bill_detail', bill_id=bill.number) }}" class="list-group-item list-group-item-action">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div class="flex-grow-1">
+                        <strong style="color: var(--deep-purple);">{{ bill.number }}</strong>
+                        {% if bill.title %}
+                          <p class="mb-1 small">{{ bill.title[:100] }}{% if bill.title|length > 100 %}...{% endif %}</p>
+                        {% endif %}
+                        {% if bill.last_action %}
+                          <small class="text-muted">
+                            <i class="bi bi-calendar-x"></i> {{ bill.last_action[:80] }}{% if bill.last_action|length > 80 %}...{% endif %}
+                          </small>
+                        {% endif %}
+                      </div>
+                      <span class="badge bg-danger ms-2">{{ bill.status }}</span>
+                    </div>
+                  </a>
+                {% endfor %}
               </div>
-
-              <div class="list-group-item">
-                <div class="d-flex justify-content-between align-items-start">
-                  <div>
-                    <strong style="color: var(--deep-purple);">HB 567</strong>
-                    <p class="mb-1 small">Environmental Protection Standards</p>
-                    <small class="text-muted">
-                      <i class="bi bi-calendar-x"></i> Failed: March 20, 2025
-                    </small>
-                  </div>
-                  <span class="badge bg-danger">Rejected</span>
+              {% if failed_bills|length > 10 %}
+                <div class="mt-3 text-center">
+                  <small class="text-muted">
+                    <i class="bi bi-info-circle"></i> Showing 10 of {{ failed_bills|length }} failed bills
+                  </small>
                 </div>
-              </div>
-
-              <div class="list-group-item">
-                <div class="d-flex justify-content-between align-items-start">
-                  <div>
-                    <strong style="color: var(--deep-purple);">HB 890</strong>
-                    <p class="mb-1 small">Public Transit Funding Bill</p>
-                    <small class="text-muted">
-                      <i class="bi bi-calendar-x"></i> Failed: February 14, 2025
-                    </small>
-                  </div>
-                  <span class="badge bg-warning text-dark">Tabled</span>
-                </div>
-              </div>
-            </div>
-            
-            <div class="mt-3 text-center">
-              <small class="text-muted">
-                <i class="bi bi-info-circle"></i> Showing recent unsuccessful legislation
-              </small>
-            </div>
+              {% endif %}
+            {% else %}
+              <p class="text-muted mb-0">
+                <i class="bi bi-info-circle"></i> No bills have been rejected.
+              </p>
+            {% endif %}
           </div>
         </div>
       </div>
     </div>
+    {% endif %}
   {% else %}
     <div class="alert alert-custom"><i class="bi bi-exclamation-triangle"></i> Representative not found.</div>
   {% endif %}
