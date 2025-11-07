@@ -16,7 +16,7 @@
             </p>
         </div>
         <div>
-            <a href="{{ url_for('representatives.rep_detail', rep_id=representative.id) }}" class="btn btn-outline-secondary">
+            <a href="{{ url_for('reps.rep_detail', district=representative.district) }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-1"></i>Back to Profile
             </a>
         </div>
@@ -150,7 +150,7 @@
 
     <!-- Back Button -->
     <div class="mt-4 text-center">
-        <a href="{{ url_for('representatives.rep_detail', rep_id=representative.id) }}" class="btn btn-outline-secondary">
+        <a href="{{ url_for('reps.rep_detail', district=representative.district) }}" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left me-1"></i>Back to {{ representative.name }}'s Profile
         </a>
     </div>
