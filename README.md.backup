@@ -1,280 +1,141 @@
-# Purp# Purp
+# Purp
 
+![Tests](https://github.com/wanderinganalyst/purp/workflows/Test%20Suite/badge.svg)
+![Branch Protection](https://github.com/wanderinganalyst/purp/workflows/Branch%20Protection/badge.svg)
 
+A comprehensive civic engagement platform for Missouri citizens to track legislation, connect with representatives, participate in events, and engage in the democratic process.
 
-![Tests](https://github.com/wanderinganalyst/purp/workflows/Test%20Suite/badge.svg)![Tests](https://github.com/wanderinganalyst/purp/workflows/Test%20Suite/badge.svg)
+## Features
 
-![Branch Protection](https://github.com/wanderinganalyst/purp/workflows/Branch%20Protection/badge.svg)![Branch Protection](https://github.com/wanderinganalyst/purp/workflows/Branch%20Protection/badge.svg)
+- **📜 Bill Tracking**: View, comment on, and support/oppose Missouri House bills
+- **👔 Representative Finder**: Automatically discover your state representatives based on your address
+- **✉️ Direct Messaging**: Send messages directly to your representatives
+- **📅 Event Management**: Representatives can create events with purchasable options (tickets, merchandise, etc.)
+- **🗳️ Run Support**: Support users who are thinking about running for office
+- **💬 Comment System**: Engage with legislation and other constituents
+- **🔐 Role-Based Access**: Different permissions for citizens, representatives, candidates, staffers, and admins
 
+## Quick Start (Local Development)
 
-
-A comprehensive civic engagement platform for Missouri citizens to track legislation, connect with representatives, participate in events, and engage in the democratic process.A comprehensive civic engagement platform for Missouri citizens to track legislation, connect with representatives, participate in events, and engage in the democratic process.
-
-
-
-## Features## Features
-
-
-
-- 📜 **Bill Tracking** - View, comment on, and support/oppose Missouri House bills- **📜 Bill Tracking**: View, comment on, and support/oppose Missouri House bills
-
-- 👔 **Representative Finder** - Automatically discover your state representatives based on address- **👔 Representative Finder**: Automatically discover your state representatives based on your address
-
-- ✉️ **Direct Messaging** - Send messages directly to your representatives- **✉️ Direct Messaging**: Send messages directly to your representatives
-
-- 📅 **Event Management** - Create and attend political events with ticketing and merchandise- **📅 Event Management**: Representatives can create events with purchasable options (tickets, merchandise, etc.)
-
-- 🗳️ **Run Support** - Support users thinking about running for office- **🗳️ Run Support**: Support users who are thinking about running for office
-
-- 💬 **Comment System** - Engage with legislation and other constituents- **💬 Comment System**: Engage with legislation and other constituents
-
-- 🔐 **Role-Based Access** - Different permissions for citizens, representatives, candidates, and admins- **🔐 Role-Based Access**: Different permissions for citizens, representatives, candidates, staffers, and admins
-
-
-
-## Quick Start## Quick Start (Local Development)
-
-
-
-### Local Development### 1. Create a virtual environment and activate it:
-
-
-
-```bash```bash
-
-# 1. Create virtual environmentpython3 -m venv .venv
-
-python3 -m venv .venvsource .venv/bin/activate
-
-source .venv/bin/activate```
-
-
-
-# 2. Install dependencies### 2. Install dependencies:
-
-pip install -r requirements.txt
+### 1. Create a virtual environment and activate it:
 
 ```bash
-
-# 3. Initialize databasepython -m pip install --upgrade pip
-
-python3 init_db.pypip install -r requirements.txt
-
+python3 -m venv .venv
+source .venv/bin/activate
 ```
 
-# 4. (Optional) Seed data
+### 2. Install dependencies:
 
-python3 sync_reps.py### 3. Initialize the database:
+```bash
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
 
+### 3. Initialize the database:
+
+```bash
+python3 init_db.py
+```
+
+### 4. (Optional) Seed data:
+
+```bash
+# Fetch current Missouri House representatives
+python3 sync_reps.py
+
+# Fetch current bills from Missouri House
 python3 sync_bills.py
 
-python3 seed_templates.py```bash
-
-python3 init_db.py
-
-# 5. Run the application```
-
-python main.py
-
-```### 4. (Optional) Seed data:
-
-
-
-Open http://localhost:5000 in your browser.```bash
-
-# Fetch current Missouri House representatives
-
-### Dockerpython3 sync_reps.py
-
-
-
-```bash# Fetch current bills from Missouri House
-
-# Build and runpython3 sync_bills.py
-
-docker-compose up --build
-
 # Create event templates (Rally and Dinner)
+python3 seed_templates.py
 
-# Initialize databasepython3 seed_templates.py
-
-docker-compose run --rm web python init_db.py
-
-```# Create an admin user
-
+# Create an admin user
 python3 create_admin.py
+```
 
-See [docs/deployment/docker.md](docs/deployment/docker.md) for details.```
+### 5. Run the application:
 
+```bash
+python main.py
+```
 
+Open http://localhost:5000 in your browser.
 
-## Project Structure### 5. Run the application:
+## User Roles
 
+The application supports several user roles with different permissions:
 
-
-``````bash
-
-purp/python main.py
-
-├── main.py                     # Application entry point```
-
-├── models/                     # Database models
-
-├── routes/                     # Route blueprintsOpen http://localhost:5000 in your browser.
-
-├── templates/                  # HTML templates
-
-├── services/                   # Business logic## User Roles
-
-├── utils/                      # Utility modules
-
-├── tests/                      # Test suite (100+ tests)The application supports several user roles with different permissions:
-
-├── infrastructure/             # Multi-cloud deployment
-
-└── docs/                       # Documentation- **Regular User**: Can view bills, comment, message representatives, RSVP to events
-
-```- **Power User**: Enhanced permissions (configurable)
-
+- **Regular User**: Can view bills, comment, message representatives, RSVP to events
+- **Power User**: Enhanced permissions (configurable)
 - **Candidate**: User running for office, can create and manage events
-
-## Documentation- **Rep Staffer**: Can manage events and invitations for their representative
-
+- **Rep Staffer**: Can manage events and invitations for their representative
 - **Representative**: Linked to a Representative profile, full event and constituent management
+- **Admin**: Full system access, can create events for any representative, manage all users
 
-### Getting Started- **Admin**: Full system access, can create events for any representative, manage all users
-
-- [Installation & Setup](docs/getting-started.md)
-
-- [Configuration Guide](docs/configuration.md)## Key Features Explained
-
-- [User Roles & Permissions](docs/user-roles.md)
+## Key Features Explained
 
 ### Bill Tracking
-
-### Features- Browse current Missouri House bills
-
-- [Bill Tracking](docs/features/bills.md)- View bill details, sponsors, and status
-
-- [Representative Finder](docs/features/representatives.md)- Comment on legislation
-
-- [Events & Ticketing](docs/features/events.md)- Support or oppose bills with one click
-
-- [Messaging System](docs/features/messaging.md)- See aggregated support/opposition counts
-
-- [Run Support](docs/features/run-support.md)
+- Browse current Missouri House bills
+- View bill details, sponsors, and status
+- Comment on legislation
+- Support or oppose bills with one click
+- See aggregated support/opposition counts
 
 ### Representative Connection
-
-### Development- Automatic representative lookup by address using Missouri Legislature data
-
-- [System Architecture](docs/development/architecture.md)- View representative profiles with district, party, and contact info
-
-- [Data Fetcher](docs/development/data-fetcher.md)- Direct messaging system to contact your representatives
-
-- [Database Schema](docs/development/database.md)- See bills introduced by your representatives
-
-- [API Documentation](docs/development/api.md)
+- Automatic representative lookup by address using Missouri Legislature data
+- View representative profiles with district, party, and contact info
+- Direct messaging system to contact your representatives
+- See bills introduced by your representatives
 
 ### Event System
-
-### Deployment- Create events using customizable templates (Rally, Dinner, etc.)
-
-- [Docker Setup](docs/deployment/docker.md)- Purchasable options organized by category:
-
-- [Production Deployment](docs/deployment/production.md)  - Seating (VIP, Front Row, General Admission)
-
-- [Cloud Infrastructure](docs/deployment/cloud.md)  - Food & Drinks (Meals, Wine Pairing, Bar Packages)
-
+- Create events using customizable templates (Rally, Dinner, etc.)
+- Purchasable options organized by category:
+  - Seating (VIP, Front Row, General Admission)
+  - Food & Drinks (Meals, Wine Pairing, Bar Packages)
   - Merchandise (Hats, Pins, Stickers, Flags)
-
-### Testing  - Transportation (Bus, Valet, Shuttle)
-
-- [Quick Start](docs/testing/quick-start.md)- Shopping cart functionality
-
-- [Test Infrastructure](docs/testing/infrastructure.md)- Invitation management with personal messages
-
-- [Test Coverage Summary](docs/testing/summary.md)- RSVP tracking (Attending, Maybe, Not Attending)
-
+  - Transportation (Bus, Valet, Shuttle)
+- Shopping cart functionality
+- Invitation management with personal messages
+- RSVP tracking (Attending, Maybe, Not Attending)
 - Event templates with reusable options
 
-## Testing
-
 ### Run Support System
-
-```bash- Users can indicate they're "thinking about running for office"
-
-# Run all tests- Other users can show support for potential candidates
-
-pytest- Support counts displayed on:
-
+- Users can indicate they're "thinking about running for office"
+- Other users can show support for potential candidates
+- Support counts displayed on:
   - User profiles
-
-# Run with coverage  - Bill comments (candidates marked with ~* symbol)
-
-pytest --cov=. --cov-report=html  - Representative detail pages (Local Candidates section)
-
+  - Bill comments (candidates marked with ~* symbol)
+  - Representative detail pages (Local Candidates section)
 - Toggle support on/off with one click
 
-# Run specific categories
-
-pytest tests/unit/          # Unit tests### Profile Management
-
-pytest tests/integration/   # Integration tests- Customizable bio
-
-pytest tests/e2e/          # End-to-end tests- Political aspirations indicator
-
-```- View representative information
-
+### Profile Management
+- Customizable bio
+- Political aspirations indicator
+- View representative information
 - See support counts for potential candidates
-
-See [docs/testing/](docs/testing/) for complete testing documentation.
 
 ## Alternative Start Methods
 
-## Contributing
 
-
-
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ### Flask CLI
 
-1. Fork the repository
-
-2. Create a feature branch```bash
-
-3. Make your changes with testsexport FLASK_APP=main.py
-
-4. Submit a pull requestflask run
-
+```bash
+export FLASK_APP=main.py
+flask run
 ```
-
-## License
 
 ### Production Server
 
-MIT License - See LICENSE file for details.
-
 For production, use Gunicorn:
 
-## Support
-
 ```bash
-
-- **Issues**: [GitHub Issues](https://github.com/wanderinganalyst/purp/issues)gunicorn -w 4 -b 0.0.0.0:5000 main:app
-
-- **Discussions**: [GitHub Discussions](https://github.com/wanderinganalyst/purp/discussions)```
-
-- **Security**: Report privately to repository maintainers
+gunicorn -w 4 -b 0.0.0.0:5000 main:app
+```
 
 ## Database Migrations
 
----
-
 The project includes migration scripts for adding new database features:
-
-**Note**: This application is for educational and civic engagement purposes. Always verify legislative information with official government sources.
 
 ```bash
 # Add representative_id to users table
