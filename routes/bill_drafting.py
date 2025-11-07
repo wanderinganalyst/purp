@@ -24,7 +24,7 @@ bill_drafting_bp = Blueprint('bill_drafting', __name__)
 
 
 def rep_required(f):
-    """Decorator to require representative role."""
+    """Decorator to require representative or admin role."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         user_id = session.get('user_id')
@@ -33,8 +33,8 @@ def rep_required(f):
             return redirect(url_for('auth.login'))
         
         user = User.query.get(user_id)
-        if not user or user.role != 'rep':
-            flash('This feature is only available to representatives.', 'error')
+        if not user or user.role not in ['rep', 'admin']:
+            flash('This feature is only available to representatives and administrators.', 'error')
             return redirect(url_for('index'))
         
         return f(*args, **kwargs)
@@ -42,7 +42,7 @@ def rep_required(f):
 
 
 def rep_or_staffer_required(f):
-    """Decorator to require representative or staffer role."""
+    """Decorator to require representative, staffer, or admin role."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         user_id = session.get('user_id')
@@ -51,8 +51,8 @@ def rep_or_staffer_required(f):
             return redirect(url_for('auth.login'))
         
         user = User.query.get(user_id)
-        if not user or user.role not in ['rep', 'staffer']:
-            flash('This feature is only available to representatives and staff.', 'error')
+        if not user or user.role not in ['rep', 'staffer', 'admin']:
+            flash('This feature is only available to representatives, staff, and administrators.', 'error')
             return redirect(url_for('index'))
         
         return f(*args, **kwargs)
@@ -121,13 +121,22 @@ def generate_draft():
             max_examples=max_examples
         )
         
+        # Get all reps if admin
+        user_id = session.get('user_id')
+        user = User.query.get(user_id)
+        all_reps = None
+        if user.role == 'admin':
+            all_reps = Representative.query.order_by(Representative.district).all()
+        
         return render_template(
             'bill_drafting/result.html',
+            user=user,
             topic=topic,
             description=description,
             prompt=prompt,
             context_info=context_info,
-            additional_instructions=additional_instructions
+            additional_instructions=additional_instructions,
+            all_reps=all_reps
         )
         
     except Exception as e:
@@ -235,15 +244,27 @@ def workspace():
     """
     Representative's draft bill workspace.
     Shows all their draft bills with visibility controls.
+    Admins can view all drafts from all representatives.
     """
     user_id = session.get('user_id')
     user = User.query.get(user_id)
     
-    # Get representative ID (could be rep themselves or their staffer's boss)
+    # Get representative ID (could be rep themselves, their staffer's boss, or admin viewing all)
     if user.role == 'rep':
         rep_id = user.representative_id
     elif user.role == 'staffer':
         rep_id = user.rep_boss_id
+    elif user.role == 'admin':
+        # Admin can specify which rep to view, or default to first rep
+        rep_id = request.args.get('rep_id', type=int)
+        if not rep_id:
+            # Get first representative or allow admin to pick
+            first_rep = Representative.query.first()
+            if first_rep:
+                rep_id = first_rep.id
+            else:
+                flash('No representatives found. Please create a representative first.', 'warning')
+                return redirect(url_for('index'))
     else:
         flash('Access denied.', 'error')
         return redirect(url_for('index'))
@@ -257,12 +278,18 @@ def workspace():
     drafts = get_rep_drafts(rep_id)
     stats = get_draft_statistics(rep_id)
     
+    # For admins, get list of all representatives for switching
+    all_reps = None
+    if user.role == 'admin':
+        all_reps = Representative.query.order_by(Representative.district).all()
+    
     return render_template(
         'bill_drafting/workspace.html',
         user=user,
         representative=representative,
         drafts=drafts,
-        stats=stats
+        stats=stats,
+        all_reps=all_reps
     )
 
 
@@ -275,7 +302,23 @@ def save_draft():
     user_id = session.get('user_id')
     user = User.query.get(user_id)
     
-    if not user.representative_id:
+    # Determine which representative this draft is for
+    if user.role == 'admin':
+        # Admin must specify which representative
+        rep_id = request.form.get('rep_id', type=int)
+        if not rep_id:
+            flash('Please select a representative to save the draft for.', 'error')
+            return redirect(request.referrer or url_for('bill_drafting.workspace'))
+        
+        representative = Representative.query.get(rep_id)
+        if not representative:
+            flash('Representative not found.', 'error')
+            return redirect(request.referrer or url_for('bill_drafting.workspace'))
+        
+        representative_id = rep_id
+    elif user.representative_id:
+        representative_id = user.representative_id
+    else:
         flash('You must have a representative profile to save drafts.', 'error')
         return redirect(url_for('bill_drafting.draft_bill'))
     
@@ -315,7 +358,7 @@ def save_draft():
         else:
             # Create new draft
             draft = save_draft_bill(
-                representative_id=user.representative_id,
+                representative_id=representative_id,
                 title=title,
                 content=content,
                 description=description,
@@ -345,8 +388,8 @@ def update_visibility(draft_id):
     if not draft:
         return jsonify({'error': 'Draft not found'}), 404
     
-    # Only the rep who created it can update
-    if draft.representative_id != user.representative_id:
+    # Only the rep who created it (or admin) can update
+    if user.role != 'admin' and draft.representative_id != user.representative_id:
         return jsonify({'error': 'Access denied'}), 403
     
     visibility = request.json.get('visibility') if request.is_json else request.form.get('visibility')
@@ -394,10 +437,11 @@ def view_draft(draft_id):
     # Get comments
     comments = get_draft_comments(draft_id)
     
-    # Check if user is owner or staffer
+    # Check if user is owner, staffer, or admin
     is_owner = user and user.representative_id == draft.representative_id
     is_staffer = user and user.role == 'staffer' and user.rep_boss_id == draft.representative_id
-    can_edit = is_owner or is_staffer
+    is_admin = user and user.role == 'admin'
+    can_edit = is_owner or is_staffer or is_admin
     
     return render_template(
         'bill_drafting/draft_detail.html',
@@ -460,7 +504,7 @@ def add_comment(draft_id):
 def delete_draft(draft_id):
     """
     Delete a draft bill.
-    Only the rep who created it can delete.
+    Only the rep who created it (or admin) can delete.
     """
     user_id = session.get('user_id')
     user = User.query.get(user_id)
@@ -470,8 +514,8 @@ def delete_draft(draft_id):
         flash('Draft not found.', 'error')
         return redirect(url_for('bill_drafting.workspace'))
     
-    # Only the rep who created it can delete
-    if draft.representative_id != user.representative_id:
+    # Only the rep who created it (or admin) can delete
+    if user.role != 'admin' and draft.representative_id != user.representative_id:
         flash('Access denied.', 'error')
         return redirect(url_for('bill_drafting.workspace'))
     

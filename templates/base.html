@@ -339,7 +339,7 @@
               <a class="nav-link" href="{{ url_for('bills.bills_list') }}">
                 <i class="bi bi-list-ul"></i> All Bills
               </a>
-              {% if session.get('role') == 'rep' %}
+              {% if session.get('role') in ['rep', 'admin'] %}
               <a class="nav-link" href="{{ url_for('bill_drafting.draft_bill') }}">
                 <i class="bi bi-robot"></i> AI Bill Drafting
               </a>

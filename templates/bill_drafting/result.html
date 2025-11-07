@@ -144,6 +144,9 @@
                     
                     <form method="POST" action="{{ url_for('bill_drafting.save_draft') }}">
                         <input type="hidden" name="llm_prompt" value="{{ prompt }}">
+                        {% if user.role == 'admin' and all_reps %}
+                        <input type="hidden" name="rep_id" value="{{ request.args.get('rep_id', all_reps[0].id if all_reps else '') }}">
+                        {% endif %}
                         
                         <div class="mb-3">
                             <label for="draft_title" class="form-label">Bill Title <span class="text-danger">*</span></label>
