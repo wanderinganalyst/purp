@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header" style="background: var(--royal-purple); color: white;">
+                    <h3 class="mb-0"><i class="bi bi-pencil"></i> Edit Profile</h3>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-end mb-3">
+                        <a href="{{ url_for('profile.view_profile') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-person"></i> View My Profile
+                        </a>
+                    </div>
+                    <form method="POST" action="{{ url_for('profile.edit_profile') }}">
+                        <!-- Bio -->
+                        <div class="mb-4">
+                            <label for="bio" class="form-label">
+                                <strong>About Me / Bio</strong>
+                            </label>
+                            <textarea 
+                                class="form-control" 
+                                id="bio" 
+                                name="bio" 
+                                rows="6" 
+                                placeholder="Tell us about yourself..."
+                                maxlength="5000">{{ user.bio if user.bio else '' }}</textarea>
+                            <div class="form-text">Optional. Maximum 5000 characters.</div>
+                        </div>
+
+                        <!-- Thinking About Running -->
+                        <div class="mb-4">
+                            <div class="card" style="border-color: var(--royal-purple);">
+                                <div class="card-header" style="background: var(--pale-purple);">
+                                    <h5 class="mb-0"><i class="bi bi-megaphone"></i> Political Aspirations</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-check form-switch">
+                                        <input 
+                                            class="form-check-input" 
+                                            type="checkbox" 
+                                            id="thinking_about_running" 
+                                            name="thinking_about_running"
+                                            {% if user.thinking_about_running %}checked{% endif %}
+                                            style="cursor: pointer;">
+                                        <label class="form-check-label" for="thinking_about_running" style="cursor: pointer;">
+                                            <strong>I'm thinking about running for office</strong>
+                                        </label>
+                                    </div>
+                                    <div class="form-text mt-2">
+                                        Check this box if you're considering running for political office. 
+                                        This will display on your profile and may help you connect with others interested in supporting candidates.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Account Info (Read-Only) -->
+                        <div class="mb-4">
+                            <h5>Account Information</h5>
+                            <hr>
+                            <div class="row mb-2">
+                                <div class="col-md-4"><strong>Username:</strong></div>
+                                <div class="col-md-8">{{ user.username }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-md-4"><strong>Role:</strong></div>
+                                <div class="col-md-8">
+                                    {% if user.role == 'admin' %}
+                                        <span class="badge bg-danger"><i class="bi bi-shield-fill"></i> Admin</span>
+                                    {% elif user.role == 'rep' %}
+                                        <span class="badge bg-success"><i class="bi bi-briefcase"></i> Representative</span>
+                                    {% elif user.role == 'rep_staffer' %}
+                                        <span class="badge bg-info"><i class="bi bi-person-badge"></i> Rep Staffer</span>
+                                    {% elif user.role == 'candidate' %}
+                                        <span class="badge" style="background: var(--royal-purple);"><i class="bi bi-megaphone"></i> Candidate</span>
+                                    {% elif user.role == 'power' %}
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-star-fill"></i> Power User</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary"><i class="bi bi-person"></i> Regular User</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="form-text">
+                                To change your username or address, please contact an administrator.
+                            </div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('profile.view_profile') }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary" style="background: var(--royal-purple); border-color: var(--royal-purple);">
+                                <i class="bi bi-check-circle"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

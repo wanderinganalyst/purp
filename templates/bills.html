@@ -2,36 +2,244 @@
 
 {% block title %}Bills - BecauseImStuck{% endblock %}
 
+{% block additional_styles %}
+  .bill-card {
+    border-left: 4px solid var(--light-purple);
+    transition: all 0.3s ease;
+  }
+  .bill-card:hover {
+    border-left-color: var(--royal-purple);
+    background: rgba(138, 43, 226, 0.05);
+    transform: translateX(5px);
+  }
+  .bill-status-badge {
+    background: var(--pale-purple);
+    color: var(--deep-purple);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+  }
+{% endblock %}
+
 {% block content %}
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <h1 class="h3 mb-0"><i class="bi bi-file-text"></i> Missouri House Bills</h1>
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h1 class="h2 mb-1" style="color: var(--royal-purple);">
+        <i class="bi bi-file-text-fill"></i> Missouri House Bills
+      </h1>
+      <p class="text-muted mb-0">Browse active legislation</p>
+    </div>
+    <div>
+      <span class="badge" style="background: var(--light-purple); font-size: 0.9rem;">
+        {{ pagination.total if pagination else (bills|length if bills else 0) }} Total Bills
+      </span>
+    </div>
+  </div>
+
+  <!-- Search and Filter Bar -->
+  <div class="card shadow-sm mb-4" style="border-left: 4px solid var(--light-purple);">
+    <div class="card-body">
+      <form method="get" action="{{ url_for('bills.bills_list') }}" class="row g-3">
+        <!-- Search Input -->
+        <div class="col-md-6">
+          <label for="search" class="form-label">
+            <i class="bi bi-search"></i> Search Bills
+          </label>
+          <input type="text" 
+                 class="form-control" 
+                 id="search" 
+                 name="search" 
+                 placeholder="Search by number, title, description, or sponsor..."
+                 value="{{ search if search else '' }}">
+        </div>
+        
+        <!-- Sort By Dropdown -->
+        <div class="col-md-3">
+          <label for="sort" class="form-label">
+            <i class="bi bi-sort-down"></i> Sort By
+          </label>
+          <select class="form-select" id="sort" name="sort">
+            <option value="number" {% if sort_by == 'number' %}selected{% endif %}>Bill Number</option>
+            <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title</option>
+            <option value="updated" {% if sort_by == 'updated' %}selected{% endif %}>Last Updated</option>
+          </select>
+        </div>
+        
+        <!-- Per Page Dropdown -->
+        <div class="col-md-2">
+          <label for="per_page" class="form-label">
+            <i class="bi bi-list-ol"></i> Per Page
+          </label>
+          <select class="form-select" id="per_page" name="per_page">
+            <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+            <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+            <option value="200" {% if per_page == 200 %}selected{% endif %}>200</option>
+            <option value="500" {% if per_page == 500 %}selected{% endif %}>All</option>
+          </select>
+        </div>
+        
+        <!-- Submit Button -->
+        <div class="col-md-1 d-flex align-items-end">
+          <button type="submit" class="btn w-100" style="background: var(--royal-purple); color: white;">
+            <i class="bi bi-funnel-fill"></i>
+          </button>
+        </div>
+      </form>
+      
+      <!-- Clear Filters Link -->
+      {% if search or sort_by != 'number' or per_page != 100 %}
+        <div class="mt-2">
+          <a href="{{ url_for('bills.bills_list') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-x-circle"></i> Clear Filters
+          </a>
+        </div>
+      {% endif %}
+    </div>
   </div>
 
   {% if bills %}
-    <div class="list-group shadow-sm">
+    <!-- Results Info -->
+    <div class="mb-3">
+      <small class="text-muted">
+        {% if pagination %}
+          {% set end_item = pagination.page * pagination.per_page %}
+          {% if end_item > pagination.total %}
+            {% set end_item = pagination.total %}
+          {% endif %}
+          Showing {{ ((pagination.page - 1) * pagination.per_page) + 1 }} - 
+          {{ end_item }} 
+          of {{ pagination.total }} bills
+          {% if search %}
+            (filtered by "{{ search }}")
+          {% endif %}
+        {% else %}
+          Showing {{ bills|length }} bills
+        {% endif %}
+      </small>
+    </div>
+
+    <!-- Bills List -->
+    <div class="list-group shadow">
       {% for b in bills %}
         {% set bill_id = b.number if b.number else b.id %}
         {% set bill_title = b.title if b.title else b.description %}
-        <a class="list-group-item list-group-item-action" href="{{ url_for('bills.bill_detail', bill_id=bill_id) }}">
-          <div class="d-flex w-100 justify-content-between">
-            <h5 class="mb-1">{{ bill_id }}</h5>
-            {% if b.sponsor %}<small class="text-muted">Sponsor: {{ b.sponsor }}</small>{% endif %}
+        <a class="list-group-item list-group-item-action bill-card" href="{{ url_for('bills.bill_detail', bill_id=bill_id) }}">
+          <div class="d-flex w-100 justify-content-between align-items-start">
+            <div class="flex-grow-1">
+              <h5 class="mb-2" style="color: var(--deep-purple);">
+                <i class="bi bi-file-earmark-text"></i> {{ bill_id }}
+              </h5>
+              {% if bill_title %}
+                <p class="mb-2">{{ bill_title }}</p>
+              {% endif %}
+              <div class="d-flex gap-2 flex-wrap align-items-center">
+                {% if b.sponsor %}
+                  <small class="text-muted">
+                    <i class="bi bi-person-badge"></i> {{ b.sponsor }}
+                  </small>
+                {% endif %}
+                {% if b.status %}
+                  <span class="bill-status-badge">
+                    <i class="bi bi-flag-fill"></i> {{ b.status }}
+                  </span>
+                {% endif %}
+                {% if b.last_action %}
+                  <small class="text-muted">
+                    <i class="bi bi-clock-history"></i> {{ b.last_action }}
+                  </small>
+                {% endif %}
+                {% if session.get('user_id') %}
+                  {# Aggregate counts by querying votes lazily if available - requires DB presence #}
+                  {% set support_count = 0 %}
+                  {% set oppose_count = 0 %}
+                  {% if b.support_count is defined and b.support_count is not none %}
+                    {% set support_count = b.support_count %}
+                  {% endif %}
+                  {% if b.oppose_count is defined and b.oppose_count is not none %}
+                    {% set oppose_count = b.oppose_count %}
+                  {% endif %}
+                  <small class="text-muted">
+                    <i class="bi bi-arrow-up"></i> {{ support_count }} / <i class="bi bi-arrow-down"></i> {{ oppose_count }}
+                  </small>
+                {% endif %}
+              </div>
+            </div>
+            <div class="ms-3">
+              <i class="bi bi-chevron-right" style="color: var(--accent-purple);"></i>
+            </div>
           </div>
-          {% if bill_title %}
-            <p class="mb-1">{{ bill_title }}</p>
-          {% endif %}
-          {% if b.status or b.last_action %}
-            <small class="text-muted">
-              {% if b.status %}<span class="me-2">Status: {{ b.status }}</span>{% endif %}
-              {% if b.last_action %}<span>Last action: {{ b.last_action }}</span>{% endif %}
-            </small>
-          {% endif %}
         </a>
       {% endfor %}
     </div>
+
+    <!-- Pagination Controls -->
+    {% if pagination and pagination.pages > 1 %}
+      <nav aria-label="Bills pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+          <!-- Previous Button -->
+          <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+            <a class="page-link" 
+               href="{% if pagination.has_prev %}{{ url_for('bills.bills_list', page=pagination.prev_num, search=search, sort=sort_by, per_page=per_page) }}{% else %}#{% endif %}"
+               style="{% if pagination.has_prev %}color: var(--royal-purple);{% endif %}">
+              <i class="bi bi-chevron-left"></i> Previous
+            </a>
+          </li>
+          
+          <!-- Page Numbers -->
+          {% set start_page = max(1, pagination.page - 2) %}
+          {% set end_page = min(pagination.pages, pagination.page + 2) %}
+          
+          {% if start_page > 1 %}
+            <li class="page-item">
+              <a class="page-link" 
+                 href="{{ url_for('bills.bills_list', page=1, search=search, sort=sort_by, per_page=per_page) }}"
+                 style="color: var(--royal-purple);">1</a>
+            </li>
+            {% if start_page > 2 %}
+              <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+          {% endif %}
+          
+          {% for page_num in range(start_page, end_page + 1) %}
+            <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+              <a class="page-link" 
+                 href="{{ url_for('bills.bills_list', page=page_num, search=search, sort=sort_by, per_page=per_page) }}"
+                 style="{% if page_num == pagination.page %}background: var(--royal-purple); border-color: var(--royal-purple);{% else %}color: var(--royal-purple);{% endif %}">
+                {{ page_num }}
+              </a>
+            </li>
+          {% endfor %}
+          
+          {% if end_page < pagination.pages %}
+            {% if end_page < pagination.pages - 1 %}
+              <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+            <li class="page-item">
+              <a class="page-link" 
+                 href="{{ url_for('bills.bills_list', page=pagination.pages, search=search, sort=sort_by, per_page=per_page) }}"
+                 style="color: var(--royal-purple);">{{ pagination.pages }}</a>
+            </li>
+          {% endif %}
+          
+          <!-- Next Button -->
+          <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+            <a class="page-link" 
+               href="{% if pagination.has_next %}{{ url_for('bills.bills_list', page=pagination.next_num, search=search, sort=sort_by, per_page=per_page) }}{% else %}#{% endif %}"
+               style="{% if pagination.has_next %}color: var(--royal-purple);{% endif %}">
+              Next <i class="bi bi-chevron-right"></i>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    {% endif %}
   {% else %}
     <div class="alert alert-custom">
-      <i class="bi bi-info-circle"></i> No bills found or remote fetch failed.
+      <i class="bi bi-info-circle-fill"></i> 
+      {% if search %}
+        No bills found matching "{{ search }}". Try a different search term.
+      {% else %}
+        No bills found or remote fetch failed.
+      {% endif %}
     </div>
   {% endif %}
 {% endblock %}

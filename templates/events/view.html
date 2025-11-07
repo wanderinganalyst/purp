@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ event.title }} - BecauseImStuck{% endblock %}
+
+{% block content %}
+  <div class="mb-4">
+    <h1 class="h2 mb-1" style="color: var(--royal-purple);">
+      <i class="bi bi-calendar-event-fill"></i> {{ event.title }}
+    </h1>
+    <p class="text-muted mb-0">
+      <i class="bi bi-calendar3"></i> {{ event.event_date.strftime('%A, %B %d, %Y at %I:%M %p') }}
+      {% if event.location %}
+        | <i class="bi bi-geo-alt-fill"></i> {{ event.location }}
+      {% endif %}
+    </p>
+  </div>
+
+  <!-- RSVP Section -->
+  {% if session.get('user_id') %}
+    <div class="card shadow-sm mb-4" style="border-left: 4px solid var(--royal-purple);">
+      <div class="card-body">
+        <h5 class="card-title" style="color: var(--royal-purple);">
+          <i class="bi bi-calendar-check-fill"></i> Are you attending?
+        </h5>
+        <form method="post" action="{{ url_for('events.rsvp_event', event_id=event.id) }}" class="d-inline">
+          <div class="btn-group" role="group">
+            <button type="submit" name="status" value="attending" class="btn btn-success">
+              <i class="bi bi-check-circle-fill"></i> Yes, I'm Going
+            </button>
+            <button type="submit" name="status" value="maybe" class="btn btn-warning">
+              <i class="bi bi-question-circle-fill"></i> Maybe
+            </button>
+            <button type="submit" name="status" value="not_attending" class="btn btn-secondary">
+              <i class="bi bi-x-circle-fill"></i> Can't Attend
+            </button>
+          </div>
+        </form>
+        {% if user_rsvp %}
+          <p class="mt-2 mb-0 text-muted">
+            <small>Your RSVP: <strong>{{ user_rsvp.status.replace('_', ' ').title() }}</strong></small>
+          </p>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Event Details -->
+  <div class="card shadow-sm mb-4" style="border-left: 4px solid var(--light-purple);">
+    <div class="card-body">
+      <h5 class="card-title" style="color: var(--royal-purple);">Event Details</h5>
+      
+      {% if event.event_type %}
+        <p class="mb-2">
+          <strong>Type:</strong> 
+          <span class="badge bg-secondary">{{ event.event_type.replace('_', ' ').title() }}</span>
+        </p>
+      {% endif %}
+      
+      {% if event.description %}
+        <p class="mt-3 mb-0">{{ event.description }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Shopping Cart and Purchase Options -->
+  {% if options %}
+    <div class="d-flex justify-content-end mb-3">
+      <a href="{{ url_for('events.view_cart', event_id=event.id) }}" class="btn btn-primary">
+        <i class="bi bi-cart3"></i> View Cart
+        {% if cart_count > 0 %}
+          <span class="badge bg-light text-dark">{{ cart_count }}</span>
+        {% endif %}
+      </a>
+    </div>
+
+    <div class="card shadow-sm mb-4" style="border-left: 4px solid var(--gold);">
+      <div class="card-header" style="background-color: var(--gold); color: white;">
+        <h5 class="mb-0"><i class="bi bi-bag-fill"></i> Purchase Options</h5>
+      </div>
+      <div class="card-body">
+          
+          <!-- Group options by type -->
+          {% set seating_options = options|selectattr('option_type', 'equalto', 'seating')|list %}
+          {% set food_options = options|selectattr('option_type', 'equalto', 'food')|list %}
+          {% set merchandise_options = options|selectattr('option_type', 'equalto', 'merchandise')|list %}
+          {% set transportation_options = options|selectattr('option_type', 'equalto', 'transportation')|list %}
+          {% set other_options = options|rejectattr('option_type', 'in', ['seating', 'food', 'merchandise', 'transportation'])|list %}
+
+          <!-- Seating Options -->
+          {% if seating_options %}
+            <div class="mb-4">
+              <h6 class="text-uppercase text-muted mb-3">
+                <i class="bi bi-person-check-fill"></i> Seating
+              </h6>
+              <div class="row">
+                {% for option in seating_options %}
+                  <div class="col-md-6 mb-3">
+                    <div class="card h-100 border-primary">
+                      <div class="card-body">
+                        <h6 class="card-title">{{ option.option_name }}</h6>
+                        {% if option.description %}
+                          <p class="card-text text-muted small">{{ option.description }}</p>
+                        {% endif %}
+                        <div class="d-flex justify-content-between align-items-center">
+                          <strong class="text-primary">${{ "%.2f"|format(option.price) }}</strong>
+                          <div class="input-group" style="width: 120px;">
+                            <input type="number" 
+                                   class="form-control form-control-sm" 
+                                   name="option_{{ option.id }}" 
+                                   min="0" 
+                                   max="10"
+                                   value="0"
+                                   placeholder="Qty">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+
+          <!-- Food Options -->
+          {% if food_options %}
+            <div class="mb-4">
+              <h6 class="text-uppercase text-muted mb-3">
+                <i class="bi bi-cup-straw"></i> Food & Drinks
+              </h6>
+              <div class="row">
+                {% for option in food_options %}
+                  <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                      <div class="card-body">
+                        <h6 class="card-title">{{ option.option_name }}</h6>
+                        {% if option.description %}
+                          <p class="card-text text-muted small">{{ option.description }}</p>
+                        {% endif %}
+                        <div class="d-flex justify-content-between align-items-center">
+                          <strong>${{ "%.2f"|format(option.price) }}</strong>
+                          <div class="input-group" style="width: 100px;">
+                            <input type="number" 
+                                   class="form-control form-control-sm" 
+                                   name="option_{{ option.id }}" 
+                                   min="0" 
+                                   max="20"
+                                   value="0">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+
+          <!-- Merchandise Options -->
+          {% if merchandise_options %}
+            <div class="mb-4">
+              <h6 class="text-uppercase text-muted mb-3">
+                <i class="bi bi-bag-fill"></i> Merchandise
+              </h6>
+              <div class="row">
+                {% for option in merchandise_options %}
+                  <div class="col-md-3 mb-3">
+                    <div class="card h-100">
+                      <div class="card-body">
+                        <h6 class="card-title">{{ option.option_name }}</h6>
+                        <div class="d-flex justify-content-between align-items-center">
+                          <strong>${{ "%.2f"|format(option.price) }}</strong>
+                          <div class="input-group" style="width: 80px;">
+                            <input type="number" 
+                                   class="form-control form-control-sm" 
+                                   name="option_{{ option.id }}" 
+                                   min="0" 
+                                   max="50"
+                                   value="0">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+
+          <!-- Transportation Options -->
+          {% if transportation_options %}
+            <div class="mb-4">
+              <h6 class="text-uppercase text-muted mb-3">
+                <i class="bi bi-bus-front-fill"></i> Transportation
+              </h6>
+              <div class="row">
+                {% for option in transportation_options %}
+                  <div class="col-md-6 mb-3">
+                    <div class="card h-100 border-success">
+                      <div class="card-body">
+                        <h6 class="card-title">{{ option.option_name }}</h6>
+                        {% if option.description %}
+                          <p class="card-text text-muted small">{{ option.description }}</p>
+                        {% endif %}
+                        <div class="d-flex justify-content-between align-items-center">
+                          <strong class="text-success">${{ "%.2f"|format(option.price) }}</strong>
+                          <div class="input-group" style="width: 120px;">
+                            <input type="number" 
+                                   class="form-control form-control-sm" 
+                                   name="option_{{ option.id }}" 
+                                   min="0" 
+                                   max="5"
+                                   value="0">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+
+          <!-- Other Options -->
+          {% if other_options %}
+            <div class="mb-4">
+              <h6 class="text-uppercase text-muted mb-3">
+                <i class="bi bi-plus-circle"></i> Additional Options
+              </h6>
+              <div class="row">
+                {% for option in other_options %}
+                  <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                      <div class="card-body">
+                        <h6 class="card-title">{{ option.option_name }}</h6>
+                        {% if option.description %}
+                          <p class="card-text text-muted small">{{ option.description }}</p>
+                        {% endif %}
+                        <div class="d-flex justify-content-between align-items-center">
+                          <strong>${{ "%.2f"|format(option.price) }}</strong>
+                          <div class="input-group" style="width: 100px;">
+                            <input type="number" 
+                                   class="form-control form-control-sm" 
+                                   name="option_{{ option.id }}" 
+                                   min="0" 
+                                   max="10"
+                                   value="0">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button type="submit" class="btn btn-primary btn-lg">
+              <i class="bi bi-cart-check-fill"></i> Complete Purchase
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  {% else %}
+    <div class="alert alert-info">
+      <i class="bi bi-info-circle-fill"></i> 
+      This is a free event. No purchase necessary!
+    </div>
+  {% endif %}
+
+  <div class="mt-4">
+    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Back to Home
+    </a>
+  </div>
+{% endblock %}

@@ -4,39 +4,373 @@
 
 {% block content %}
   {% if rep %}
-    <div class="card shadow-sm mb-4">
+    <div class="card shadow-sm mb-4" style="border-left:5px solid var(--light-purple)">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-start">
-          <div>
+          <div class="flex-grow-1">
             <h2 class="card-title mb-1">{{ rep.name }}</h2>
-            <div class="small text-muted">
+            <div class="small text-muted mb-3">
               {% if rep.district %}<span class="me-3"><i class="bi bi-geo"></i> District {{ rep.district }}</span>{% endif %}
-              {% if rep.party %}<span class="badge bg-primary">{{ rep.party }}</span>{% endif %}
+              {% if rep.party %}<span class="badge" style="background: var(--pale-purple); color: var(--deep-purple);">{{ rep.party }}</span>{% endif %}
             </div>
+            <div class="d-flex gap-2 mt-2">
+              <button class="btn btn-sm" style="background: var(--royal-purple); color: white;" data-bs-toggle="modal" data-bs-target="#donationModal">
+                <i class="bi bi-heart-fill"></i> Support {{ rep.name.split()[-1] if rep.name else 'Representative' }}
+              </button>
+              
+              {% if session.get('user_id') %}
+                {% set user_reps = get_user_reps() %}
+                {% if user_reps.has_data %}
+                  {% set is_my_rep = (user_reps.representative and user_reps.representative.district == rep.district) %}
+                  {% set is_my_senator = (user_reps.senator and user_reps.senator.district == rep.district) %}
+                  
+                  {% if is_my_rep or is_my_senator %}
+                    <a href="{{ url_for('messages.compose') }}" class="btn btn-sm btn-outline-secondary">
+                      <i class="bi bi-envelope-fill"></i> Message Representative
+                    </a>
+                  {% endif %}
+                {% endif %}
+              {% endif %}
+            </div>
+          </div>
+          <div class="text-end small text-muted">
+            {% if rep.city %}<div><i class="bi bi-geo-alt"></i> {{ rep.city }}</div>{% endif %}
+            {% if rep.phone %}<div><i class="bi bi-telephone"></i> {{ rep.phone }}</div>{% endif %}
+            {% if rep.room %}<div><i class="bi bi-building"></i> Room {{ rep.room }}</div>{% endif %}
           </div>
         </div>
       </div>
     </div>
 
-    <div class="card shadow-sm">
-      <div class="card-header">
-        <h5 class="mb-0"><i class="bi bi-file-text"></i> Sponsored Bills</h5>
-      </div>
-      <div class="card-body">
-        {% if rep.sponsored_bills %}
+    {% if rep.candidate_users and rep.candidate_users|length > 0 %}
+      <div class="card shadow-sm mb-4" style="border-left:4px solid var(--royal-purple)">
+        <div class="card-header" style="background: var(--pale-purple);">
+          <h5 class="mb-0" style="color: var(--deep-purple);"><i class="bi bi-megaphone"></i> Local Candidates</h5>
+        </div>
+        <div class="card-body">
           <div class="list-group">
-            {% for bill in rep.sponsored_bills %}
-              <a class="list-group-item list-group-item-action" href="{{ url_for('bills.bill_detail', bill_id=(bill.number if bill.number else bill.id)) }}">
-                <div class="d-flex w-100 justify-content-between">
-                  <strong>{{ bill.id }}</strong>
+            {% for cand in rep.candidate_users %}
+              <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>User {{ cand.username }}</strong>
+                  <span class="ms-1" title="Considering running for office">~*</span>
                 </div>
-                {% if bill.description %}<div class="small text-muted mt-1">{{ bill.description }}</div>{% endif %}
-              </a>
+                <div>
+                  {% if cand.is_self %}
+                    <span class="badge bg-secondary" title="Supporters">{{ cand.run_support_count }} supporter{{ 's' if cand.run_support_count != 1 else '' }}</span>
+                  {% elif session.get('user_id') %}
+                    <form method="post" action="{{ url_for('profile.toggle_run_support', candidate_user_id=cand.id) }}" class="d-inline">
+                      <button type="submit" class="btn btn-sm {% if cand.user_supported %}btn-success{% else %}btn-outline-secondary{% endif %}">
+                        <i class="bi bi-heart{% if cand.user_supported %}-fill{% endif %}"></i>
+                        I support you running ({{ cand.run_support_count }})
+                      </button>
+                    </form>
+                  {% else %}
+                    <span class="badge bg-secondary" title="Login to support">{{ cand.run_support_count }} supporters</span>
+                  {% endif %}
+                </div>
+              </div>
             {% endfor %}
           </div>
-        {% else %}
-          <p class="text-muted mb-0">No sponsored bills found.</p>
-        {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Donation Modal -->
+    <div class="modal fade" id="donationModal" tabindex="-1" aria-labelledby="donationModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header" style="background: var(--pale-purple);">
+            <h5 class="modal-title" id="donationModalLabel" style="color: var(--deep-purple);">
+              <i class="bi bi-heart-fill"></i> Support {{ rep.name }}
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-3">Show your support for {{ rep.name }}'s work representing District {{ rep.district }}.</p>
+            
+            <div class="alert" style="background: var(--pale-purple); border-left: 4px solid var(--royal-purple);">
+              <small><i class="bi bi-info-circle"></i> Donation links and information will be available soon. Please check the official Missouri House website or contact the representative's office directly for campaign contribution information.</small>
+            </div>
+            
+            <div class="d-grid gap-2 mt-3">
+              <a href="https://house.mo.gov/MemberDetails.aspx?district={{ rep.district }}" 
+                 target="_blank" 
+                 class="btn btn-outline-secondary">
+                <i class="bi bi-box-arrow-up-right"></i> Visit Official Page
+              </a>
+              {% if rep.phone %}
+              <a href="tel:{{ rep.phone }}" class="btn btn-outline-secondary">
+                <i class="bi bi-telephone"></i> Call {{ rep.phone }}
+              </a>
+              {% endif %}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upcoming Events Section -->
+    {% if rep.events or (session.get('user_id') and get_user_reps()) %}
+      {% set user = None %}
+      {% if session.get('user_id') %}
+        {% set user_obj = namespace() %}
+        {# This will be checked in Python #}
+      {% endif %}
+      
+      <div class="card shadow-sm mb-4" style="border-left: 4px solid var(--light-purple);">
+        <div class="card-header" style="background: linear-gradient(90deg, var(--pale-purple), #fff);">
+          <div class="d-flex justify-content-between align-items-center">
+            <h4 class="mb-0" style="color: var(--deep-purple);">
+              <i class="bi bi-calendar-event-fill"></i> Upcoming Events
+            </h4>
+            {% if session.get('user_id') %}
+              {# Rep users will see manage button - check in template #}
+              <div id="rep-event-controls"></div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="card-body">
+          {% if rep.events %}
+            <div class="list-group">
+              {% for event in rep.events %}
+                <div class="list-group-item">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                      <h5 class="mb-2" style="color: var(--deep-purple);">
+                        <i class="bi bi-pin-map-fill"></i> 
+                        <a href="{{ url_for('events.view_event', event_id=event.id) }}" 
+                           style="color: var(--deep-purple); text-decoration: none;">
+                          {{ event.title }}
+                        </a>
+                      </h5>
+                      {% if event.description %}
+                        <p class="mb-2">{{ event.description }}</p>
+                      {% endif %}
+                      <div class="small text-muted">
+                        <div class="mb-1">
+                          <i class="bi bi-calendar3"></i> 
+                          {{ event.event_date.strftime('%A, %B %d, %Y at %I:%M %p') }}
+                        </div>
+                        {% if event.location %}
+                          <div class="mb-1">
+                            <i class="bi bi-geo-alt-fill"></i> {{ event.location }}
+                          </div>
+                        {% endif %}
+                        {% if event.event_type %}
+                          <span class="badge" style="background: var(--royal-purple);">
+                            {{ event.event_type.replace('_', ' ').title() }}
+                          </span>
+                        {% endif %}
+                        {% if event.template %}
+                          <span class="badge bg-success ms-1">
+                            <i class="bi bi-cart"></i> {{ event.template.name }}
+                          </span>
+                        {% endif %}
+                      </div>
+                      <div class="mt-2">
+                        <a href="{{ url_for('events.view_event', event_id=event.id) }}" 
+                           class="btn btn-sm btn-outline-primary">
+                          <i class="bi bi-arrow-right-circle"></i> View Event Details
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted mb-0">
+              <i class="bi bi-info-circle"></i> No upcoming events scheduled.
+            </p>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="row g-3"
+      <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+          <div class="card-header" style="background: linear-gradient(90deg, var(--pale-purple), #fff)">
+            <h5 class="mb-0"><i class="bi bi-file-text"></i> Sponsored Bills</h5>
+          </div>
+          <div class="card-body">
+            {% if rep.sponsored_bills %}
+              <div class="list-group">
+                {% for bill in rep.sponsored_bills %}
+                  {% set num = bill.number if bill.number else (bill.id if bill.id else bill) %}
+                  <a class="list-group-item list-group-item-action" href="{{ url_for('bills.bill_detail', bill_id=num) }}">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <strong style="color: var(--deep-purple);">{{ num }}</strong>
+                      <i class="bi bi-chevron-right" style="color: var(--accent-purple);"></i>
+                    </div>
+                    {% if bill.title %}
+                      <small class="text-muted">{{ bill.title }}</small>
+                    {% endif %}
+                  </a>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="text-muted mb-0">No sponsored bills found.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+          <div class="card-header" style="background: linear-gradient(90deg, var(--pale-purple), #fff)">
+            <h5 class="mb-0"><i class="bi bi-people"></i> Co-sponsored Bills</h5>
+          </div>
+          <div class="card-body">
+            {% if rep.cosponsored_bills %}
+              <div class="list-group">
+                {% for bill in rep.cosponsored_bills %}
+                  {% set num = bill.number if bill.number else (bill.id if bill.id else bill) %}
+                  <a class="list-group-item list-group-item-action" href="{{ url_for('bills.bill_detail', bill_id=num) }}">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <strong style="color: var(--deep-purple);">{{ num }}</strong>
+                      <i class="bi bi-chevron-right" style="color: var(--accent-purple);"></i>
+                    </div>
+                    {% if bill.title %}
+                      <small class="text-muted">{{ bill.title }}</small>
+                    {% endif %}
+                  </a>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="text-muted mb-0">No co-sponsored bills found.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bills Passed and Failed Section -->
+    <div class="row g-3 mt-3">
+      <div class="col-12">
+        <h4 class="mb-3" style="color: var(--royal-purple);">
+          <i class="bi bi-bar-chart-fill"></i> Legislative Track Record
+        </h4>
+      </div>
+
+      <!-- Bills Passed -->
+      <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+          <div class="card-header" style="background: linear-gradient(90deg, #d4edda, #fff); border-left: 4px solid #28a745;">
+            <h5 class="mb-0 text-success"><i class="bi bi-check-circle-fill"></i> Bills Passed</h5>
+          </div>
+          <div class="card-body">
+            <div class="list-group">
+              <!-- Mock data for demonstration -->
+              <div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <strong style="color: var(--deep-purple);">HB 123</strong>
+                    <p class="mb-1 small">Education Funding Reform Act</p>
+                    <small class="text-muted">
+                      <i class="bi bi-calendar-check"></i> Passed: March 15, 2025
+                    </small>
+                  </div>
+                  <span class="badge bg-success">Signed</span>
+                </div>
+              </div>
+              
+              <div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <strong style="color: var(--deep-purple);">HB 456</strong>
+                    <p class="mb-1 small">Infrastructure Improvement Initiative</p>
+                    <small class="text-muted">
+                      <i class="bi bi-calendar-check"></i> Passed: February 8, 2025
+                    </small>
+                  </div>
+                  <span class="badge bg-success">Enacted</span>
+                </div>
+              </div>
+
+              <div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <strong style="color: var(--deep-purple);">HB 789</strong>
+                    <p class="mb-1 small">Small Business Tax Relief</p>
+                    <small class="text-muted">
+                      <i class="bi bi-calendar-check"></i> Passed: January 22, 2025
+                    </small>
+                  </div>
+                  <span class="badge bg-success">Law</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-3 text-center">
+              <small class="text-muted">
+                <i class="bi bi-info-circle"></i> Showing recent passed legislation
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bills Failed -->
+      <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+          <div class="card-header" style="background: linear-gradient(90deg, #f8d7da, #fff); border-left: 4px solid #dc3545;">
+            <h5 class="mb-0 text-danger"><i class="bi bi-x-circle-fill"></i> Bills Not Passed</h5>
+          </div>
+          <div class="card-body">
+            <div class="list-group">
+              <!-- Mock data for demonstration -->
+              <div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <strong style="color: var(--deep-purple);">HB 234</strong>
+                    <p class="mb-1 small">Healthcare Expansion Amendment</p>
+                    <small class="text-muted">
+                      <i class="bi bi-calendar-x"></i> Failed: April 3, 2025
+                    </small>
+                  </div>
+                  <span class="badge bg-danger">Defeated</span>
+                </div>
+              </div>
+
+              <div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <strong style="color: var(--deep-purple);">HB 567</strong>
+                    <p class="mb-1 small">Environmental Protection Standards</p>
+                    <small class="text-muted">
+                      <i class="bi bi-calendar-x"></i> Failed: March 20, 2025
+                    </small>
+                  </div>
+                  <span class="badge bg-danger">Rejected</span>
+                </div>
+              </div>
+
+              <div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <strong style="color: var(--deep-purple);">HB 890</strong>
+                    <p class="mb-1 small">Public Transit Funding Bill</p>
+                    <small class="text-muted">
+                      <i class="bi bi-calendar-x"></i> Failed: February 14, 2025
+                    </small>
+                  </div>
+                  <span class="badge bg-warning text-dark">Tabled</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-3 text-center">
+              <small class="text-muted">
+                <i class="bi bi-info-circle"></i> Showing recent unsuccessful legislation
+              </small>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   {% else %}

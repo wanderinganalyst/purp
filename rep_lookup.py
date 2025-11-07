@@ -22,17 +22,23 @@ class RepresentativeLookup:
             if not form:
                 return None
                 
-            # Prepare the form data
-            data = {
-                'Address': address,
-                'City': city,
-                'Zip': zip_code,
-                'Submit': 'Submit'
-            }
+            # Prepare the form data with proper ASP.NET field names
+            data = {}
             
-            # Add any hidden fields from the form
+            # Get all hidden fields (VIEWSTATE, etc.)
             for hidden in form.find_all('input', type='hidden'):
-                data[hidden.get('name', '')] = hidden.get('value', '')
+                name = hidden.get('name')
+                value = hidden.get('value', '')
+                if name:
+                    data[name] = value
+            
+            # Set the address fields using correct ASP.NET control names
+            data['ctl00$MainContent$txtAddress'] = address
+            data['ctl00$MainContent$txtCity'] = city
+            data['ctl00$MainContent$txtZip'] = zip_code
+            
+            # Set the submit button that was clicked
+            data['ctl00$MainContent$ZipButton'] = 'Lookup Legislators'
                 
             # Submit the form
             response = session.post(RepresentativeLookup.LOOKUP_URL, data=data)
@@ -45,40 +51,45 @@ class RepresentativeLookup:
                 'district_info': {}
             }
             
-            # Parse the results
-            content = soup.find('div', {'class': 'content'}) or soup
+            # Parse the results - look for the results panel or divs
+            # The results typically appear in specific div elements after form submission
+            result_divs = soup.find_all('div', {'class': ['panel', 'resultPanel', 'legislator-info']})
             
-            # Look for senator and representative information
-            for p in content.find_all('p'):
-                text = p.get_text()
-                
-                # Extract Senator info
-                if 'Senator' in text:
-                    results['state_senator'] = {
-                        'name': re.search(r'Senator\s+(.*?)(?:\s+\(|$)', text).group(1) if re.search(r'Senator\s+(.*?)(?:\s+\(|$)', text) else None,
-                        'district': re.search(r'District\s+(\d+)', text).group(1) if re.search(r'District\s+(\d+)', text) else None,
-                        'party': re.search(r'\((.*?)\)', text).group(1) if re.search(r'\((.*?)\)', text) else None
-                    }
-                
-                # Extract Representative info
-                if 'Representative' in text:
-                    results['state_representative'] = {
-                        'name': re.search(r'Representative\s+(.*?)(?:\s+\(|$)', text).group(1) if re.search(r'Representative\s+(.*?)(?:\s+\(|$)', text) else None,
-                        'district': re.search(r'District\s+(\d+)', text).group(1) if re.search(r'District\s+(\d+)', text) else None,
-                        'party': re.search(r'\((.*?)\)', text).group(1) if re.search(r'\((.*?)\)', text) else None
-                    }
-                
-                # Extract district information
-                if 'District' in text:
-                    district_match = re.search(r'District\s+(\d+)', text)
-                    if district_match:
-                        district_num = district_match.group(1)
-                        results['district_info'][district_num] = text
+            # Also check for any divs with legislator information
+            if not result_divs:
+                result_divs = soup.find_all('div', id=lambda x: x and ('result' in x.lower() or 'legislator' in x.lower()))
+            
+            # Parse all text for Senator and Representative info
+            full_text = soup.get_text()
+            lines = [line.strip() for line in full_text.split('\n') if line.strip()]
+            
+            # Join lines to handle multi-line results
+            combined_text = ' '.join(lines)
+            
+            # Look for pattern: "Senatorial district MO### - Senator Name"
+            senator_match = re.search(r'Senatorial district\s+MO(\d+)\s+-\s+Senator\s+([A-Za-z\s\.\-\']+?)(?:House|U\.S\.|Your|$)', combined_text, re.IGNORECASE)
+            if senator_match:
+                results['state_senator'] = {
+                    'name': senator_match.group(2).strip(),
+                    'district': senator_match.group(1),
+                    'party': None  # Party info not in this format
+                }
+            
+            # Look for pattern: "House district MO### - Representative Name"
+            rep_match = re.search(r'House district\s+MO(\d+)\s+-\s+Representative\s+([A-Za-z\s\.\-\']+?)(?:U\.S\.|Your|Senatorial|$)', combined_text, re.IGNORECASE)
+            if rep_match:
+                results['state_representative'] = {
+                    'name': rep_match.group(2).strip(),
+                    'district': rep_match.group(1),
+                    'party': None  # Party info not in this format
+                }
             
             return results
             
         except Exception as e:
             print(f"Error looking up representatives: {e}")
+            import traceback
+            traceback.print_exc()
             return None
             
     @staticmethod

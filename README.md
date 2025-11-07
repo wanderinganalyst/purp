@@ -1,7 +1,7 @@
 # BecauseImStuck
 
-![Tests](https://github.com/YOUR_USERNAME/becauseImstuck/workflows/Test%20Suite/badge.svg)
-![Branch Protection](https://github.com/YOUR_USERNAME/becauseImstuck/workflows/Branch%20Protection/badge.svg)
+![Tests](https://github.com/wanderinganalyst/purp/workflows/Test%20Suite/badge.svg)
+![Branch Protection](https://github.com/wanderinganalyst/purp/workflows/Branch%20Protection/badge.svg)
 
 A Flask application for tracking bills and representatives with comprehensive testing and multi-cloud deployment infrastructure.
 
@@ -125,6 +125,72 @@ pytest tests/docker/
 ```
 
 See [tests/README.md](tests/README.md) for complete testing documentation.
+
+## Representative Confirmation
+
+### User Interface
+
+Logged-in users can confirm and update their representative information:
+
+1. **Sidebar Widget**: Shows current representatives in the left sidebar
+   - Displays State Senator and State Representative
+   - Shows district and party affiliation
+   - "Find My Reps" or "Update Reps" button
+
+2. **Confirmation Page**: `/confirm-reps` route
+   - Shows user's registered address
+   - Displays current representative information (if available)
+   - One-click lookup from Missouri Legislature website
+   - Automatic update of user profile
+
+### Command-Line Script
+
+Administrators can batch-update representative information:
+
+```bash
+# Update all users with missing or stale rep data (90+ days old)
+python confirm_user_reps.py
+
+# Update a specific user by ID
+python confirm_user_reps.py --user-id 123
+
+# Update a specific user by username
+python confirm_user_reps.py --username johndoe
+
+# Force update even if data is recent
+python confirm_user_reps.py --user-id 123 --force
+
+# Update all users regardless of when last updated
+python confirm_user_reps.py --all
+
+# Custom staleness threshold (default 90 days)
+python confirm_user_reps.py --stale-days 30
+```
+
+The script:
+- Looks up representatives using the Missouri Legislature website
+- Updates user profiles with current senator and representative info
+- Tracks when information was last updated
+- Provides detailed output for each user processed
+- Safe to run repeatedly (respects update timestamps)
+
+Example output:
+```
+============================================================
+REPRESENTATIVE CONFIRMATION REPORT
+============================================================
+Processing 5 user(s)...
+
+🔍 Looking up representatives for: johndoe
+   Address: 123 Main St, Jefferson City, MO 65101
+
+✅ User: johndoe (ID: 1)
+   Representatives updated successfully
+   👔 State Senator: Jane Smith
+      District: 15, Party: D
+   🏛️  State Representative: John Johnson
+      District: 48, Party: R
+```
 
 ## Project Structure
 

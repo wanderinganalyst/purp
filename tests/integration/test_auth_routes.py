@@ -155,8 +155,31 @@ class TestLogout:
     
     def test_logout(self, auth_client):
         """Test logout."""
-        response = auth_client.get('/logout', follow_redirects=True)
+        # Navbar form submits POST; ensure POST works
+        response = auth_client.post('/logout', follow_redirects=True)
         assert response.status_code == 200
+        # Session should be cleared
+        with auth_client.session_transaction() as sess:
+            assert 'user_id' not in sess
+
+    def test_logout_get_also_works(self, auth_client):
+        """Ensure GET /logout also logs out for backward compatibility."""
+        # Log in again first
+        auth_client.post('/login', data={'username': 'testuser', 'password': 'testpass123'})
+        with auth_client.session_transaction() as sess:
+            assert 'user_id' in sess
+        resp = auth_client.get('/logout', follow_redirects=True)
+        assert resp.status_code == 200
+        with auth_client.session_transaction() as sess2:
+            assert 'user_id' not in sess2
+
+    def test_access_protected_after_logout_redirects(self, auth_client):
+        """After logout, protected route should redirect to login."""
+        auth_client.post('/logout')
+        resp = auth_client.get('/profile', follow_redirects=False)
+        # Expect redirect to /login (302)
+        assert resp.status_code in (302, 303)
+        assert '/login' in resp.headers.get('Location', '')
 
 
 class TestProfile:

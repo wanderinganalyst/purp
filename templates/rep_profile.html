@@ -45,7 +45,7 @@
       {% if rep.sponsored_bills %}
         {% for bill in rep.sponsored_bills %}
           <div class="bill">
-            <div class="id"><a href="{{ url_for('bill_detail', bill_id=bill.id) }}">{{ bill.id }}</a></div>
+            <div class="id"><a href="{{ url_for('bills.bill_detail', bill_id=bill.id) }}">{{ bill.id }}</a></div>
             <div class="desc">{{ bill.description }}</div>
           </div>
         {% endfor %}

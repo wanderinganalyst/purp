@@ -2,29 +2,155 @@
 
 {% block title %}Bill Detail - BecauseImStuck{% endblock %}
 
+{% block additional_styles %}
+  .bill-detail-card {
+    border-left: 5px solid var(--light-purple);
+    transition: box-shadow 0.3s ease;
+  }
+  .bill-detail-card:hover {
+    border-left-color: var(--royal-purple);
+    box-shadow: 0 6px 20px rgba(138,43,226,0.25);
+  }
+  .comment-card-header {
+    background: linear-gradient(90deg, var(--pale-purple) 0%, #fff 60%);
+    border-bottom: 1px solid var(--light-purple);
+  }
+  .comment-owner-actions .dropdown-menu {
+    font-size: 0.85rem;
+  }
+  .badge-status {
+    background: var(--pale-purple);
+    color: var(--deep-purple);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: .5px;
+  }
+{% endblock %}
+
 {% block content %}
   {% if bill %}
-    <div class="card shadow-sm mb-4">
+    <div class="card shadow-sm mb-4 bill-detail-card">
       <div class="card-body">
-        <h2 class="card-title mb-2">{{ bill.number if bill.number else bill.id }}</h2>
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <h2 class="card-title mb-0">{{ bill.number if bill.number else bill.id }}</h2>
+          <div class="text-end" style="min-width:140px;">
+            <div class="d-flex flex-column align-items-end">
+              <form method="post" action="{{ url_for('bills.support_bill', bill_id=(bill.number if bill.number else bill.id)) }}" class="mb-1">
+                <button type="submit" class="btn btn-sm {% if bill_user_vote == 1 %}btn-success{% else %}btn-outline-secondary{% endif %}" title="Support ({{ bill_support_count }})" aria-label="Support this bill">
+                  <i class="bi bi-arrow-up"></i> {{ bill_support_count }}
+                </button>
+              </form>
+              <form method="post" action="{{ url_for('bills.not_support_bill', bill_id=(bill.number if bill.number else bill.id)) }}">
+                <button type="submit" class="btn btn-sm {% if bill_user_vote == -1 %}btn-danger{% else %}btn-outline-secondary{% endif %}" title="Do Not Support ({{ bill_oppose_count }})" aria-label="Do not support this bill">
+                  <i class="bi bi-arrow-down"></i> {{ bill_oppose_count }}
+                </button>
+              </form>
+            </div>
+            <small class="text-muted">Score: {{ bill_support_count - bill_oppose_count }}</small>
+          </div>
+        </div>
         <div class="small text-muted mb-3">
-          {% if bill.sponsor %}<span class="me-3"><i class="bi bi-person"></i> Sponsor: {{ bill.sponsor }}</span>{% endif %}
+          {% if bill.sponsor %}
+            <span class="me-3">
+              <i class="bi bi-person"></i> Sponsor: 
+              <a href="{{ url_for('reps.reps_list') }}" class="text-decoration-none" title="View representative profile">{{ bill.sponsor }}</a>
+            </span>
+          {% endif %}
           {% if bill.status %}<span class="me-3"><i class="bi bi-flag"></i> Status: {{ bill.status }}</span>{% endif %}
           {% if bill.last_action %}<span class="me-3"><i class="bi bi-clock-history"></i> Last Action: {{ bill.last_action }}</span>{% endif %}
           {% if bill.committee %}<span class="me-3"><i class="bi bi-diagram-3"></i> Committee: {{ bill.committee }}</span>{% endif %}
           {% if bill.introduced %}<span><i class="bi bi-calendar"></i> Introduced: {{ bill.introduced }}</span>{% endif %}
         </div>
         {% if bill.summary %}
-          <p class="mb-0">{{ bill.summary }}</p>
+          <p class="mb-3">{{ bill.summary }}</p>
+        {% elif bill.description %}
+          <p class="mb-3">{{ bill.description }}</p>
+        {% else %}
+          <p class="text-muted fst-italic">No description provided for this bill.</p>
+        {% endif %}
+
+        <!-- Official links -->
+        <div class="mt-3">
+          {% if bill.text_pdf_url %}
+            <a href="{{ bill.text_pdf_url }}" target="_blank" class="btn btn-outline-primary btn-sm me-2"><i class="bi bi-file-earmark-text"></i> Full Bill Text (PDF)</a>
+          {% endif %}
+          {% if bill.summary_pdf_url %}
+            <a href="{{ bill.summary_pdf_url }}" target="_blank" class="btn btn-outline-primary btn-sm me-2"><i class="bi bi-file-earmark-text"></i> Summary (PDF)</a>
+          {% endif %}
+          {% if bill.content_url %}
+            <a href="{{ bill.content_url }}" target="_blank" class="btn btn-outline-secondary btn-sm"><i class="bi bi-box-arrow-up-right"></i> Official Page</a>
+          {% endif %}
+        </div>
+
+        {% if bill.hearing_status %}
+          <div class="mt-2 text-muted"><i class="bi bi-mic"></i> Hearing: {{ bill.hearing_status }}</div>
         {% endif %}
       </div>
     </div>
+
+    {% if bill.actions and bill.actions|length > 0 %}
+      <div class="card shadow-sm mb-4">
+        <div class="card-header comment-card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="bi bi-list-check"></i> Latest Actions</h5>
+          {% if bill.actions|length > 1 %}
+            <button class="btn btn-sm btn-outline-secondary" type="button" onclick="toggleActions()" id="toggleActionsBtn">
+              <i class="bi bi-chevron-down" id="toggleActionsIcon"></i> Show All ({{ bill.actions|length }})
+            </button>
+          {% endif %}
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table mb-0">
+              <thead>
+                <tr>
+                  <th style="width: 120px;">Date</th>
+                  <th style="width: 80px;">JRN PG</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="actionsTableBody">
+                {% for a in bill.actions %}
+                  <tr class="{% if loop.index > 1 %}action-row-hidden{% endif %}" {% if loop.index > 1 %}style="display: none;"{% endif %}>
+                    <td class="text-nowrap">{{ a.date }}</td>
+                    <td class="text-nowrap">{{ a.journal }}</td>
+                    <td>{{ a.description }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      <script>
+        function toggleActions() {
+          const hiddenRows = document.querySelectorAll('.action-row-hidden');
+          const btn = document.getElementById('toggleActionsBtn');
+          const icon = document.getElementById('toggleActionsIcon');
+          const isExpanded = hiddenRows[0].style.display !== 'none';
+          
+          hiddenRows.forEach(row => {
+            row.style.display = isExpanded ? 'none' : '';
+          });
+          
+          if (isExpanded) {
+            icon.className = 'bi bi-chevron-down';
+            btn.innerHTML = '<i class="bi bi-chevron-down" id="toggleActionsIcon"></i> Show All ({{ bill.actions|length }})';
+          } else {
+            icon.className = 'bi bi-chevron-up';
+            btn.innerHTML = '<i class="bi bi-chevron-up" id="toggleActionsIcon"></i> Hide';
+          }
+        }
+      </script>
+    {% endif %}
   {% else %}
     <div class="alert alert-custom"><i class="bi bi-exclamation-triangle"></i> Bill not found.</div>
   {% endif %}
 
   <div class="card shadow-sm">
-    <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="card-header d-flex justify-content-between align-items-center comment-card-header">
       <h5 class="mb-0"><i class="bi bi-chat-dots"></i> Comments</h5>
       {% if session.get('user_id') %}
         <small class="text-muted">Add your thoughts</small>
@@ -36,6 +162,33 @@
           {% for c in comments %}
             <li class="list-group-item">
               <div class="d-flex align-items-start">
+                <!-- Vote controls -->
+                <div class="me-3 text-center" style="width: 52px;">
+                  {% if session.get('user_id') %}
+                    <form action="{{ url_for('bills.support_comment', comment_id=c.id) }}" method="post" class="mb-1">
+                      <button type="submit" class="btn btn-sm {% if c.user_vote == 1 %}btn-success{% else %}btn-outline-secondary{% endif %} p-1" title="Support ({{ c.support_count or 0 }})" aria-label="Support">
+                        <i class="bi bi-arrow-up"></i>
+                      </button>
+                    </form>
+                  {% else %}
+                    <button class="btn btn-sm btn-outline-secondary p-1 mb-1" disabled title="Login to support">
+                      <i class="bi bi-arrow-up"></i>
+                    </button>
+                  {% endif %}
+                  <div class="small text-muted">{{ (c.support_count or 0) - (c.oppose_count or 0) }}</div>
+                  {% if session.get('user_id') %}
+                    <form action="{{ url_for('bills.not_support_comment', comment_id=c.id) }}" method="post" class="mt-1">
+                      <button type="submit" class="btn btn-sm {% if c.user_vote == -1 %}btn-danger{% else %}btn-outline-secondary{% endif %} p-1" title="Do not support ({{ c.oppose_count or 0 }})" aria-label="Do not support">
+                        <i class="bi bi-arrow-down"></i>
+                      </button>
+                    </form>
+                  {% else %}
+                    <button class="btn btn-sm btn-outline-secondary p-1 mt-1" disabled title="Login to mark not support">
+                      <i class="bi bi-arrow-down"></i>
+                    </button>
+                  {% endif %}
+                </div>
+
                 <!-- Three-dot menu on the left if owner -->
                 <div class="me-2">
                   {% if session.get('user_id') and c.user_id == session.get('user_id') %}
@@ -63,8 +216,27 @@
                 </div>
 
                 <div class="flex-grow-1">
-                  <div class="d-flex justify-content-between">
-                    <strong>User {{ c.user_id }}</strong>
+                  <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div>
+                      <strong>User {{ c.user_id }}</strong>
+                      {% if c.is_thinking_running %}
+                        <span class="ms-1" title="Considering running for office">~*</span>
+                        <div class="d-inline-block ms-2">
+                          {% if session.get('user_id') and c.user_id != session.get('user_id') %}
+                            <form method="post" action="{{ url_for('profile.toggle_run_support', candidate_user_id=c.user_id) }}" class="d-inline">
+                              <button type="submit" class="btn btn-sm {% if c.user_run_supported %}btn-success{% else %}btn-outline-secondary{% endif %}">
+                                <i class="bi bi-heart{% if c.user_run_supported %}-fill{% endif %}"></i>
+                                I support you running ({{ c.run_support_count }})
+                              </button>
+                            </form>
+                          {% else %}
+                            <span class="badge rounded-pill bg-info-subtle text-dark" title="Considering running for office">
+                              <i class="bi bi-megaphone"></i> Considering running
+                            </span>
+                          {% endif %}
+                        </div>
+                      {% endif %}
+                    </div>
                     <small class="text-muted">{{ c.created_at }}</small>
                   </div>
                   <div class="mt-1" id="comment-text-{{ c.id }}">{{ c.content }}</div>

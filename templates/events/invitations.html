@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Invitations - {{ event.title }} - BecauseImStuck{% endblock %}
+
+{% block content %}
+  <div class="mb-4">
+    <h1 class="h2 mb-1" style="color: var(--royal-purple);">
+      <i class="bi bi-envelope-fill"></i> Event Invitations
+    </h1>
+    <p class="text-muted mb-0">{{ event.title }} - {{ event.event_date.strftime('%B %d, %Y') }}</p>
+  </div>
+
+  <!-- RSVP Summary -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card shadow-sm text-center">
+        <div class="card-body">
+          <h3 class="text-success">{{ rsvp_counts.attending }}</h3>
+          <p class="mb-0">Attending</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm text-center">
+        <div class="card-body">
+          <h3 class="text-warning">{{ rsvp_counts.maybe }}</h3>
+          <p class="mb-0">Maybe</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm text-center">
+        <div class="card-body">
+          <h3 class="text-secondary">{{ rsvp_counts.not_attending }}</h3>
+          <p class="mb-0">Not Attending</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Invite Constituents Form -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header" style="background: var(--light-purple);">
+      <h5 class="mb-0">Invite Constituents</h5>
+    </div>
+    <div class="card-body">
+      <form method="post" action="{{ url_for('events.manage_invitations', event_id=event.id) }}">
+        <!-- Optional Message -->
+        <div class="mb-3">
+          <label for="message" class="form-label">Personal Message (Optional)</label>
+          <textarea class="form-control" 
+                    id="message" 
+                    name="message" 
+                    rows="3"
+                    maxlength="1000"
+                    placeholder="Add a personal message to your invitation..."></textarea>
+        </div>
+
+        <!-- Constituent List -->
+        <div class="mb-3">
+          <label class="form-label">Select Constituents to Invite:</label>
+          {% if constituents %}
+            <div style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="select_all" onclick="toggleAll(this)">
+                <label class="form-check-label" for="select_all">
+                  <strong>Select All</strong>
+                </label>
+              </div>
+              <hr>
+              {% for constituent in constituents %}
+                <div class="form-check mb-2">
+                  <input class="form-check-input constituent-checkbox" 
+                         type="checkbox" 
+                         name="user_ids" 
+                         value="{{ constituent.id }}"
+                         id="user_{{ constituent.id }}"
+                         {% if constituent.id in invited_user_ids %}disabled checked{% endif %}>
+                  <label class="form-check-label" for="user_{{ constituent.id }}">
+                    {{ constituent.username }} 
+                    {% if constituent.city %} - {{ constituent.city }}{% endif %}
+                    {% if constituent.id in invited_user_ids %}
+                      <span class="badge bg-success">Already Invited</span>
+                    {% endif %}
+                  </label>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted">No constituents found in your district.</p>
+          {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-send-fill"></i> Send Invitations
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <a href="{{ url_for('events.manage_events') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Back to Events
+    </a>
+  </div>
+
+  <script>
+    function toggleAll(checkbox) {
+      const checkboxes = document.querySelectorAll('.constituent-checkbox:not(:disabled)');
+      checkboxes.forEach(cb => cb.checked = checkbox.checked);
+    }
+  </script>
+{% endblock %}

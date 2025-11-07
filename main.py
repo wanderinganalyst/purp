@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 from flask import Flask, render_template, session, flash, redirect, url_for, request
 from flask_migrate import Migrate
 from extensions import db
+from datetime import datetime
 from auth import login_required, role_required
 from models import User, Comment
 from utils.data_fetcher import get_data_fetcher
@@ -38,13 +39,22 @@ def create_app(config_name='default'):
     # Register blueprints
     from auth import auth_bp
     app.register_blueprint(auth_bp)
-    
+
     from routes.bills import bills_bp
     app.register_blueprint(bills_bp)
-    
+
     from routes.representatives import reps_bp
     app.register_blueprint(reps_bp)
-
+    
+    from routes.messages import messages_bp
+    app.register_blueprint(messages_bp)
+    
+    from routes.events import events_bp
+    app.register_blueprint(events_bp)
+    
+    from routes.profile import profile_bp
+    app.register_blueprint(profile_bp)
+    
     # Error handlers
     @app.errorhandler(404)
     def not_found_error(error):
@@ -90,6 +100,40 @@ def create_app(config_name='default'):
         if 'user_id' in session:
             user = User.query.get(session.get('user_id'))
         return render_template('index.html', user=user)
+
+    @app.route('/about')
+    def about():
+        return render_template('about.html')
+
+    # Start background scheduler for periodic syncs (weekly bills, quarterly reps)
+    try:
+        from apscheduler.schedulers.background import BackgroundScheduler
+        from apscheduler.triggers.cron import CronTrigger
+
+        if os.environ.get('ENABLE_SCHEDULER', '1') == '1':
+            scheduler = BackgroundScheduler(timezone='UTC')
+
+            def _sync_bills_job():
+                from sync_bills import sync_bills_to_database
+                with app.app_context():
+                    app.logger.info(f"[Scheduler] Syncing bills @ {datetime.utcnow().isoformat()}Z")
+                    sync_bills_to_database()
+
+            def _sync_reps_job():
+                from sync_reps import main as sync_reps_main
+                with app.app_context():
+                    app.logger.info(f"[Scheduler] Syncing representatives @ {datetime.utcnow().isoformat()}Z")
+                    sync_reps_main()
+
+            # Weekly on Sunday at 03:00 UTC
+            scheduler.add_job(_sync_bills_job, CronTrigger(day_of_week='sun', hour=3, minute=0))
+            # Quarterly on the 1st day of Jan, Apr, Jul, Oct at 04:00 UTC
+            scheduler.add_job(_sync_reps_job, CronTrigger(month='1,4,7,10', day=1, hour=4, minute=0))
+            scheduler.start()
+            app.logger.info('Background scheduler started (weekly bills, quarterly reps).')
+    except Exception as e:
+        # Don't crash app if scheduler setup fails
+        print(f"Scheduler initialization skipped/error: {e}")
 
     return app
 

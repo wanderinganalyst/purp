@@ -14,7 +14,23 @@
             </h1>
             <p class="lead">
               You're logged in as a 
-              {% if user.role == 'power' %}
+              {% if user.role == 'admin' %}
+                <span class="badge bg-danger">
+                  <i class="bi bi-shield-fill-check"></i> Administrator
+                </span>
+              {% elif user.role == 'rep' %}
+                <span class="badge bg-success">
+                  <i class="bi bi-briefcase-fill"></i> Representative
+                </span>
+              {% elif user.role == 'rep_staffer' %}
+                <span class="badge bg-primary">
+                  <i class="bi bi-person-badge"></i> Rep Staffer
+              {% elif user.role == 'candidate' %}
+                <span class="badge" style="background: var(--royal-purple);">
+                  <i class="bi bi-megaphone-fill"></i> Candidate
+                </span>
+                </span>
+              {% elif user.role == 'power' %}
                 <span class="badge bg-warning text-dark">
                   <i class="bi bi-star-fill"></i> Power User
                 </span>
@@ -25,11 +41,16 @@
               {% endif %}
             </p>
             <hr>
-            {% if user.role == 'power' %}
+            {% if user.role == 'admin' %}
+              <p>As an administrator, you have full system access including the ability to edit all content, manage events, moderate comments, and access all features.</p>
+            {% elif user.role == 'rep' %}
+              <p>As a representative, you can create and manage events, send invitations, and manage your staffers.</p>
+            {% elif user.role == 'rep_staffer' %}
+              <p>As a rep staffer, you can create and manage events for your representative.</p>
+            {% elif user.role == 'candidate' %}
+              <p>As a candidate, you can create and manage campaign events, send invitations, and manage your campaign staffers.</p>
+            {% elif user.role == 'power' %}
               <p>As a power user, you have full access to all features including commenting and bill tracking.</p>
-              <a href="#" class="btn btn-warning">
-                <i class="bi bi-star-fill"></i> Go to Power Portal
-              </a>
             {% else %}
               <p>You have read-only access to bills and representative information. Upgrade to a power user account for full features!</p>
             {% endif %}
@@ -66,7 +87,7 @@
                 <i class="bi bi-person-circle display-4"></i>
                 <h5 class="card-title mt-2">Your Profile</h5>
                 <p class="mb-0">Manage your account</p>
-                <a href="#" class="btn btn-light btn-sm mt-2">Edit Profile</a>
+                <a href="{{ url_for('auth.profile') }}" class="btn btn-light btn-sm mt-2">View Profile</a>
               </div>
             </div>
           </div>

@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ template.name }} Options - BecauseImStuck{% endblock %}
+
+{% block content %}
+  <div class="mb-4">
+    <h1 class="h2 mb-1" style="color: var(--royal-purple);">
+      <i class="bi bi-sliders"></i> {{ template.name }}
+    </h1>
+    <p class="text-muted mb-0">Manage purchasable options for this event template</p>
+  </div>
+
+  <!-- Add Option Form -->
+  <div class="card shadow-sm mb-4" style="border-left: 4px solid var(--light-purple);">
+    <div class="card-header" style="background-color: var(--light-purple); color: var(--royal-purple);">
+      <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Add New Option</h5>
+    </div>
+    <div class="card-body">
+      <form method="post" action="{{ url_for('events.edit_template_options', template_id=template.id) }}">
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label for="option_name" class="form-label">
+              Option Name <span class="text-danger">*</span>
+            </label>
+            <input type="text" 
+                   class="form-control" 
+                   id="option_name" 
+                   name="option_name" 
+                   placeholder="e.g., Front Row Seat"
+                   maxlength="100"
+                   required>
+          </div>
+
+          <div class="col-md-3 mb-3">
+            <label for="option_type" class="form-label">
+              Type <span class="text-danger">*</span>
+            </label>
+            <select class="form-select" id="option_type" name="option_type" required>
+              <option value="">-- Select --</option>
+              <option value="seating">Seating</option>
+              <option value="food">Food/Drink</option>
+              <option value="merchandise">Merchandise</option>
+              <option value="transportation">Transportation</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div class="col-md-2 mb-3">
+            <label for="price" class="form-label">
+              Price ($)
+            </label>
+            <input type="number" 
+                   class="form-control" 
+                   id="price" 
+                   name="price" 
+                   min="0" 
+                   step="0.01"
+                   value="0.00">
+          </div>
+
+          <div class="col-md-3 mb-3">
+            <label class="form-label d-block">&nbsp;</label>
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="bi bi-plus"></i> Add Option
+            </button>
+          </div>
+        </div>
+
+        <div class="mb-0">
+          <label for="description" class="form-label">Description</label>
+          <input type="text" 
+                 class="form-control" 
+                 id="description" 
+                 name="description" 
+                 placeholder="Optional description..."
+                 maxlength="255">
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Current Options -->
+  <div class="card shadow-sm">
+    <div class="card-header" style="background-color: var(--royal-purple); color: white;">
+      <h5 class="mb-0"><i class="bi bi-list-check"></i> Current Options ({{ options|length }})</h5>
+    </div>
+    <div class="card-body">
+      {% if options %}
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Option Name</th>
+                <th>Type</th>
+                <th>Price</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for option in options %}
+                <tr>
+                  <td><strong>{{ option.option_name }}</strong></td>
+                  <td>
+                    <span class="badge bg-secondary">{{ option.option_type }}</span>
+                  </td>
+                  <td>${{ "%.2f"|format(option.price) }}</td>
+                  <td>
+                    {% if option.description %}
+                      {{ option.description }}
+                    {% else %}
+                      <span class="text-muted">-</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if option.is_active %}
+                      <span class="badge bg-success">Active</span>
+                    {% else %}
+                      <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <form method="post" 
+                          action="{{ url_for('events.delete_option', template_id=template.id, option_id=option.id) }}"
+                          onsubmit="return confirm('Delete this option?');"
+                          style="display: inline;">
+                      <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="alert alert-info mb-0">
+          <i class="bi bi-info-circle-fill"></i> 
+          No options added yet. Use the form above to add purchasable options.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <a href="{{ url_for('events.manage_templates') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Back to Templates
+    </a>
+  </div>
+{% endblock %}

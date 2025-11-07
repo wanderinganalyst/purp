@@ -1,0 +1,54 @@
+<!-- Add-to-cart button example for each option -->
+<!-- Replace the complex purchase form sections in view.html with this pattern -->
+
+<!-- For each option, replace the input field with: -->
+<form method="post" action="{{ url_for('events.add_to_cart', event_id=event.id) }}" style="display: inline;">
+  <input type="hidden" name="option_id" value="{{ option.id }}">
+  <div class="input-group">
+    <input type="number" 
+           class="form-control form-control-sm" 
+           name="quantity" 
+           min="1" 
+           max="50"
+           value="1"
+           style="width: 70px;">
+    <button type="submit" class="btn btn-sm btn-primary">
+      <i class="bi bi-cart-plus"></i> Add
+    </button>
+  </div>
+</form>
+
+<!-- Full section example for Seating: -->
+{% if seating_options %}
+  <div class="mb-4">
+    <h6 class="text-uppercase text-muted mb-3">
+      <i class="bi bi-person-check-fill"></i> Seating
+    </h6>
+    <div class="row">
+      {% for option in seating_options %}
+        <div class="col-md-6 mb-3">
+          <div class="card h-100 border-primary">
+            <div class="card-body">
+              <h6 class="card-title">{{ option.option_name }}</h6>
+              {% if option.description %}
+                <p class="card-text text-muted small">{{ option.description }}</p>
+              {% endif %}
+              <div class="d-flex justify-content-between align-items-center">
+                <strong class="text-primary">${{ "%.2f"|format(option.price) }}</strong>
+                <form method="post" action="{{ url_for('events.add_to_cart', event_id=event.id) }}" style="display: inline;">
+                  <input type="hidden" name="option_id" value="{{ option.id }}">
+                  <div class="input-group" style="width: 140px;">
+                    <input type="number" class="form-control form-control-sm" name="quantity" min="1" max="10" value="1">
+                    <button type="submit" class="btn btn-sm btn-primary">
+                      <i class="bi bi-cart-plus"></i>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}

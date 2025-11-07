@@ -90,6 +90,15 @@
         font-size: 0.75rem;
       }
       
+      .rep-card a {
+        color: white;
+        transition: color 0.2s;
+      }
+      
+      .rep-card a:hover {
+        color: var(--accent-purple);
+      }
+      
       .content-area {
         background: #f8f9fa;
         min-height: calc(100vh - 56px);
@@ -133,20 +142,31 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('about') }}">
+                <i class="bi bi-info-circle"></i> About
+              </a>
+            </li>
             {% if session.get('user_id') %}
               <li class="nav-item">
                 <span class="nav-link">
                   <i class="bi bi-person-circle"></i> 
                   <strong>{{ session.get('username') }}</strong> 
-                  <span class="badge bg-light text-dark">{{ session.get('role') }}</span>
+                  {% if session.get('role') == 'admin' %}
+                    <span class="badge bg-danger"><i class="bi bi-shield-fill-check"></i> admin</span>
+                  {% elif session.get('role') == 'rep' %}
+                    <span class="badge bg-success"><i class="bi bi-briefcase"></i> rep</span>
+                  {% elif session.get('role') == 'power' %}
+                    <span class="badge bg-warning text-dark"><i class="bi bi-star-fill"></i> power</span>
+                  {% else %}
+                    <span class="badge bg-light text-dark">{{ session.get('role') }}</span>
+                  {% endif %}
                 </span>
               </li>
               <li class="nav-item">
-                <form action="{{ url_for('auth.logout') }}" method="post" class="d-inline">
-                  <button type="submit" class="btn btn-purple btn-sm ms-2">
-                    <i class="bi bi-box-arrow-right"></i> Logout
-                  </button>
-                </form>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-purple btn-sm ms-2">
+                  <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
               </li>
             {% else %}
               <li class="nav-item">
@@ -192,14 +212,26 @@
                       <strong class="text-light">State Representative</strong>
                       <span class="badge bg-primary">{{ user_reps.representative.party }}</span>
                     </div>
-                    <div class="text-white">{{ user_reps.representative.name }}</div>
+                    <a href="{{ url_for('reps.rep_detail', district=(user_reps.representative.district | int)) }}" class="text-decoration-none">
+                      <div class="text-white">{{ user_reps.representative.name }}</div>
+                    </a>
                     <small class="text-muted">District {{ user_reps.representative.district }}</small>
                   </div>
                 {% endif %}
+                <div class="mt-2">
+                  <a href="{{ url_for('auth.confirm_reps') }}" class="btn btn-sm btn-outline-light w-100">
+                    <i class="bi bi-arrow-clockwise"></i> Update Reps
+                  </a>
+                </div>
               {% else %}
-                <p class="small text-muted mb-0">
-                  <i class="bi bi-info-circle"></i> No representative data available yet.
-                </p>
+                <div class="rep-card text-center">
+                  <p class="small text-muted mb-2">
+                    <i class="bi bi-info-circle"></i> No representative data yet.
+                  </p>
+                  <a href="{{ url_for('auth.confirm_reps') }}" class="btn btn-sm btn-purple w-100">
+                    <i class="bi bi-search"></i> Find My Reps
+                  </a>
+                </div>
               {% endif %}
             </div>
             
@@ -209,22 +241,61 @@
             <div class="mb-4">
               <h5><i class="bi bi-gear-fill"></i> Profile & Settings</h5>
               <nav class="nav flex-column">
-                <a class="nav-link" href="#"><i class="bi bi-person"></i> Edit Profile</a>
-                <a class="nav-link" href="#"><i class="bi bi-chat-dots"></i> My Comments</a>
-                <a class="nav-link" href="#"><i class="bi bi-bookmark"></i> Saved Bills</a>
-                <a class="nav-link" href="#"><i class="bi bi-bell"></i> Notifications</a>
-                {% if session.get('role') == 'power' %}
-                  <a class="nav-link" href="#">
-                    <i class="bi bi-star-fill"></i> Power Portal
-                  </a>
+                <a class="nav-link" href="{{ url_for('profile.view_profile') }}"><i class="bi bi-person-circle"></i> My Profile</a>
+                <a class="nav-link" href="{{ url_for('messages.inbox') }}"><i class="bi bi-envelope-fill"></i> My Messages</a>
+                <a class="nav-link" href="{{ url_for('events.my_invitations') }}"><i class="bi bi-calendar-event"></i> My Event Invitations</a>
+                {% if session.get('user_id') %}
+                  {% set current_user = namespace() %}
+                  {% set current_user.obj = None %}
+                  {# Check if user is rep role - will need to be done server-side #}
                 {% endif %}
+                <a class="nav-link" href="{{ url_for('auth.edit_address') }}"><i class="bi bi-geo-alt"></i> Edit Address</a>
+                <a class="nav-link" href="{{ url_for('auth.change_password') }}"><i class="bi bi-key"></i> Change Password</a>
               </nav>
             </div>
+            
+            <!-- Rep and Admin Tools Section -->
+            {% if session.get('role') == 'rep' or session.get('role') == 'admin' or session.get('role') == 'candidate' %}
+              <div class="section-divider"></div>
+              <div class="mb-4">
+                <h5><i class="bi bi-briefcase-fill"></i> 
+                  {% if session.get('role') == 'admin' %}Admin
+                  {% elif session.get('role') == 'candidate' %}Candidate
+                  {% else %}Representative{% endif %} Tools</h5>
+                <nav class="nav flex-column">
+                  <a class="nav-link" href="{{ url_for('events.manage_events') }}">
+                    <i class="bi bi-calendar-event-fill"></i> Manage Events
+                  </a>
+                  <a class="nav-link" href="{{ url_for('events.manage_templates') }}">
+                    <i class="bi bi-file-earmark-richtext-fill"></i> Event Templates
+                  </a>
+                  <a class="nav-link" href="{{ url_for('events.manage_staffers') }}">
+                    <i class="bi bi-people-fill"></i> Manage Staffers
+                  </a>
+                </nav>
+              </div>
+            {% elif session.get('role') == 'rep_staffer' %}
+              <div class="section-divider"></div>
+              <div class="mb-4">
+                <h5><i class="bi bi-briefcase"></i> Rep Staffer Tools</h5>
+                <nav class="nav flex-column">
+                  <a class="nav-link" href="{{ url_for('events.manage_events') }}">
+                    <i class="bi bi-calendar-event-fill"></i> Manage Events
+                  </a>
+                  <a class="nav-link" href="{{ url_for('events.manage_templates') }}">
+                    <i class="bi bi-file-earmark-richtext-fill"></i> Event Templates
+                  </a>
+                </nav>
+              </div>
+            {% endif %}
           {% else %}
             <!-- Get Started Section -->
             <div class="mb-4">
               <h5><i class="bi bi-rocket-takeoff"></i> Get Started</h5>
               <nav class="nav flex-column">
+                <a class="nav-link" href="{{ url_for('about') }}">
+                  <i class="bi bi-info-circle"></i> About Us
+                </a>
                 <a class="nav-link" href="{{ url_for('auth.login') }}">
                   <i class="bi bi-box-arrow-in-right"></i> Login
                 </a>
@@ -239,11 +310,9 @@
             <!-- About Section -->
             <div class="mb-4">
               <h5><i class="bi bi-info-circle"></i> About</h5>
-              <nav class="nav flex-column">
-                <a class="nav-link" href="#"><i class="bi bi-question-circle"></i> How It Works</a>
-                <a class="nav-link" href="#"><i class="bi bi-lightbulb"></i> Why Track Bills?</a>
-                <a class="nav-link" href="#"><i class="bi bi-envelope"></i> Contact Us</a>
-              </nav>
+              <p class="small text-muted px-2">
+                Track Missouri legislation and find your representatives. Stay engaged with the democratic process.
+              </p>
             </div>
           {% endif %}
         </div>
@@ -269,9 +338,6 @@
               <a class="nav-link" href="{{ url_for('bills.bills_list') }}">
                 <i class="bi bi-list-ul"></i> All Bills
               </a>
-              <a class="nav-link" href="#"><i class="bi bi-clock-history"></i> Recent Bills</a>
-              <a class="nav-link" href="#"><i class="bi bi-search"></i> Search Bills</a>
-              <a class="nav-link" href="#"><i class="bi bi-tags"></i> Categories</a>
             </nav>
           </div>
 
@@ -284,21 +350,11 @@
               <a class="nav-link" href="{{ url_for('reps.reps_list') }}">
                 <i class="bi bi-list-ul"></i> All Representatives
               </a>
-              <a class="nav-link" href="#"><i class="bi bi-geo-alt"></i> Find My Rep</a>
-              <a class="nav-link" href="#"><i class="bi bi-map"></i> By District</a>
-              <a class="nav-link" href="#"><i class="bi bi-clipboard"></i> By Committee</a>
-            </nav>
-          </div>
-
-          <div class="section-divider"></div>
-
-          <!-- Quick Links Section -->
-          <div class="mb-4">
-            <h5><i class="bi bi-link-45deg"></i> Quick Links</h5>
-            <nav class="nav flex-column">
-              <a class="nav-link" href="#"><i class="bi bi-calendar-event"></i> Calendar</a>
-              <a class="nav-link" href="#"><i class="bi bi-people-fill"></i> Committees</a>
-              <a class="nav-link" href="#"><i class="bi bi-info-square"></i> Session Info</a>
+              {% if session.get('user_id') %}
+                <a class="nav-link" href="{{ url_for('auth.confirm_reps') }}">
+                  <i class="bi bi-geo-alt"></i> Find My Reps
+                </a>
+              {% endif %}
             </nav>
           </div>
         </div>

@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirm My Representatives - BecauseImStuck{% endblock %}
+
+{% block additional_styles %}
+  .address-card {
+    background: linear-gradient(135deg, var(--pale-purple) 0%, #fff 100%);
+    border-left: 4px solid var(--royal-purple);
+  }
+  .rep-info-card {
+    border-left: 4px solid var(--light-purple);
+    transition: all 0.3s ease;
+  }
+  .rep-info-card:hover {
+    border-left-color: var(--royal-purple);
+    box-shadow: 0 4px 12px rgba(138,43,226,0.2);
+  }
+  .lookup-btn {
+    background: linear-gradient(135deg, var(--light-purple), var(--royal-purple));
+    border: none;
+    font-weight: 600;
+    padding: 0.75rem 2rem;
+    transition: transform 0.2s ease;
+  }
+  .lookup-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(75,0,130,0.3);
+  }
+{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-md-10">
+      <h2 class="mb-4">
+        <i class="bi bi-people-fill text-purple"></i> Confirm My Representatives
+      </h2>
+
+      <!-- Address Information -->
+      <div class="card shadow-sm mb-4 address-card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="bi bi-house-door"></i> Your Registered Address
+          </h5>
+          <p class="mb-0">{{ user_address }}</p>
+          <div class="mt-2">
+            <a href="{{ url_for('auth.edit_address') }}" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-pencil"></i> Edit Address
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Current Representative Information -->
+      {% if rep_display.has_data %}
+        <div class="card shadow-sm mb-4">
+          <div class="card-header bg-white">
+            <h5 class="mb-0">
+              <i class="bi bi-info-circle"></i> Current Representative Information
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              {% if rep_display.senator %}
+                <div class="col-md-6 mb-3">
+                  <div class="card rep-info-card">
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="mb-0">State Senator</h6>
+                        <span class="badge bg-primary">{{ rep_display.senator.party }}</span>
+                      </div>
+                      <p class="mb-1 fw-bold">{{ rep_display.senator.name }}</p>
+                      <p class="small text-muted mb-0">District {{ rep_display.senator.district }}</p>
+                    </div>
+                  </div>
+                </div>
+              {% endif %}
+
+              {% if rep_display.representative %}
+                <div class="col-md-6 mb-3">
+                  <div class="card rep-info-card">
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="mb-0">State Representative</h6>
+                        <span class="badge bg-primary">{{ rep_display.representative.party }}</span>
+                      </div>
+                      <p class="mb-1 fw-bold">{{ rep_display.representative.name }}</p>
+                      <p class="small text-muted mb-0">District {{ rep_display.representative.district }}</p>
+                    </div>
+                  </div>
+                </div>
+              {% endif %}
+            </div>
+
+            {% if user.reps_last_updated %}
+              <div class="alert alert-info mt-3">
+                <i class="bi bi-clock-history"></i>
+                Last updated: {{ format_datetime(user.reps_last_updated, '%B %d, %Y at %I:%M %p') }}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      {% else %}
+        <div class="alert alert-warning">
+          <i class="bi bi-exclamation-triangle"></i>
+          <strong>No representative information found.</strong>
+          We'll look up your representatives based on your registered address.
+        </div>
+      {% endif %}
+
+      <!-- Action Section -->
+      <div class="card shadow-sm">
+        <div class="card-body text-center">
+          <h5 class="mb-3">
+            {% if rep_display.has_data %}
+              <i class="bi bi-arrow-clockwise"></i> Update Representative Information
+            {% else %}
+              <i class="bi bi-search"></i> Find My Representatives
+            {% endif %}
+          </h5>
+          <p class="text-muted">
+            {% if rep_display.has_data %}
+              Click below to refresh your representative information from the Missouri Legislature.
+            {% else %}
+              Click below to look up your state senator and representative.
+            {% endif %}
+          </p>
+          <form method="post" class="mt-4">
+            <button type="submit" class="btn btn-purple lookup-btn">
+              <i class="bi bi-search"></i>
+              {% if rep_display.has_data %}
+                Update My Representatives
+              {% else %}
+                Find My Representatives
+              {% endif %}
+            </button>
+          </form>
+          <div class="mt-3">
+            <a href="{{ url_for('index') }}" class="btn btn-link text-muted">
+              <i class="bi bi-arrow-left"></i> Back to Home
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info Section -->
+      <div class="card shadow-sm mt-4 border-0" style="background: #f8f9fa;">
+        <div class="card-body">
+          <h6 class="mb-2">
+            <i class="bi bi-info-circle text-primary"></i> How This Works
+          </h6>
+          <ul class="small mb-0">
+            <li>We look up your representatives using the official Missouri Legislature website</li>
+            <li>Your information is matched to the correct legislative districts</li>
+            <li>You'll see your State Senator and State Representative based on your address</li>
+            <li>You can update this information anytime to ensure it's current</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

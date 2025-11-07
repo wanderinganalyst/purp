@@ -24,10 +24,10 @@ def get_comments_for_bill(bill_id):
     ).order_by(Comment.created_at.desc()).all()
 
 def hide_comment(comment_id, user):
-    """Hide a comment (power users only)."""
+    """Hide a comment (power users and admins only)."""
     try:
         comment = Comment.query.get(comment_id)
-        if comment and user.role == 'power':
+        if comment and user.role in ['power', 'admin']:
             comment.is_hidden = True
             db.session.commit()
             return True
@@ -39,14 +39,14 @@ def hide_comment(comment_id, user):
 def delete_comment(comment_id, user: User):
     """Delete a comment.
 
-    - Power users can delete any comment.
+    - Power users and admins can delete any comment.
     - Regular users can delete only their own comments.
     """
     try:
         comment = Comment.query.get(comment_id)
         if not comment:
             return False
-        if user.role == 'power' or (comment.user_id == user.id):
+        if user.role in ['power', 'admin'] or (comment.user_id == user.id):
             db.session.delete(comment)
             db.session.commit()
             return True
@@ -58,7 +58,7 @@ def delete_comment(comment_id, user: User):
 def update_comment(comment_id, user: User, content: str):
     """Update a comment's content.
 
-    - Power users can edit any comment.
+    - Power users and admins can edit any comment.
     - Regular users can edit only their own comments.
     Returns True on success, False otherwise.
     """
@@ -66,7 +66,7 @@ def update_comment(comment_id, user: User, content: str):
         comment = Comment.query.get(comment_id)
         if not comment:
             return False
-        if user.role == 'power' or (comment.user_id == user.id):
+        if user.role in ['power', 'admin'] or (comment.user_id == user.id):
             comment.content = content
             db.session.commit()
             return True

@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Event - BecauseImStuck{% endblock %}
+
+{% block content %}
+  <div class="mb-4">
+    <h1 class="h2 mb-1" style="color: var(--royal-purple);">
+      <i class="bi bi-pencil-square"></i> Edit Event
+    </h1>
+    <p class="text-muted mb-0">Update event details</p>
+  </div>
+
+  <div class="card shadow-sm" style="border-left: 4px solid var(--light-purple);">
+    <div class="card-body">
+      <form method="post" action="{{ url_for('events.edit_event', event_id=event.id) }}">
+        <!-- Title -->
+        <div class="mb-3">
+          <label for="title" class="form-label">
+            <i class="bi bi-tag-fill"></i> Event Title <span class="text-danger">*</span>
+          </label>
+          <input type="text" 
+                 class="form-control" 
+                 id="title" 
+                 name="title" 
+                 value="{{ event.title }}"
+                 maxlength="255"
+                 required>
+        </div>
+
+        <!-- Event Type -->
+        <div class="mb-3">
+          <label for="event_type" class="form-label">
+            <i class="bi bi-bookmark-fill"></i> Event Type
+          </label>
+          <select class="form-select" id="event_type" name="event_type">
+            <option value="">-- Select Type --</option>
+            <option value="town_hall" {% if event.event_type == 'town_hall' %}selected{% endif %}>Town Hall</option>
+            <option value="meeting" {% if event.event_type == 'meeting' %}selected{% endif %}>Community Meeting</option>
+            <option value="fundraiser" {% if event.event_type == 'fundraiser' %}selected{% endif %}>Fundraiser</option>
+            <option value="coffee_hour" {% if event.event_type == 'coffee_hour' %}selected{% endif %}>Coffee Hour</option>
+            <option value="forum" {% if event.event_type == 'forum' %}selected{% endif %}>Forum</option>
+            <option value="other" {% if event.event_type == 'other' %}selected{% endif %}>Other</option>
+          </select>
+        </div>
+
+        <!-- Date and Time -->
+        <div class="row mb-3">
+          <div class="col-md-8">
+            <label for="event_date" class="form-label">
+              <i class="bi bi-calendar3"></i> Date & Time <span class="text-danger">*</span>
+            </label>
+            <input type="datetime-local" 
+                   class="form-control" 
+                   id="event_date" 
+                   name="event_date" 
+                   value="{{ event.event_date.strftime('%Y-%m-%dT%H:%M') }}"
+                   required>
+          </div>
+          <div class="col-md-4">
+            <label for="event_time" class="form-label">
+              <i class="bi bi-clock"></i> Time Display
+            </label>
+            <input type="text" 
+                   class="form-control" 
+                   id="event_time" 
+                   name="event_time" 
+                   value="{{ event.event_time or '' }}"
+                   placeholder="e.g., 6:00 PM - 8:00 PM"
+                   maxlength="20">
+            <small class="text-muted">Optional display format</small>
+          </div>
+        </div>
+
+        <!-- Address Section -->
+        <h5 class="border-bottom pb-2 mb-3 mt-4">
+          <i class="bi bi-geo-alt-fill"></i> Event Address
+        </h5>
+
+        <!-- Location Name -->
+        <div class="mb-3">
+          <label for="location" class="form-label">
+            <i class="bi bi-building"></i> Venue/Location Name
+          </label>
+          <input type="text" 
+                 class="form-control" 
+                 id="location" 
+                 name="location" 
+                 value="{{ event.location or '' }}"
+                 placeholder="e.g., City Hall, Community Center"
+                 maxlength="255">
+        </div>
+
+        <!-- Street Address -->
+        <div class="mb-3">
+          <label for="street_address" class="form-label">
+            <i class="bi bi-signpost"></i> Street Address
+          </label>
+          <input type="text" 
+                 class="form-control" 
+                 id="street_address" 
+                 name="street_address" 
+                 value="{{ event.street_address or '' }}"
+                 placeholder="123 Main St"
+                 maxlength="255">
+        </div>
+
+        <!-- City, State, Zip -->
+        <div class="row mb-3">
+          <div class="col-md-5">
+            <label for="city" class="form-label">City</label>
+            <input type="text" 
+                   class="form-control" 
+                   id="city" 
+                   name="city" 
+                   value="{{ event.city or '' }}"
+                   placeholder="Jefferson City"
+                   maxlength="100">
+          </div>
+          <div class="col-md-3">
+            <label for="state" class="form-label">State</label>
+            <input type="text" 
+                   class="form-control" 
+                   id="state" 
+                   name="state" 
+                   value="{{ event.state or '' }}"
+                   placeholder="MO"
+                   maxlength="2"
+                   pattern="[A-Z]{2}">
+          </div>
+          <div class="col-md-4">
+            <label for="zipcode" class="form-label">ZIP Code</label>
+            <input type="text" 
+                   class="form-control" 
+                   id="zipcode" 
+                   name="zipcode" 
+                   value="{{ event.zipcode or '' }}"
+                   placeholder="65101"
+                   maxlength="10">
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="mb-3">
+          <label for="description" class="form-label">
+            <i class="bi bi-chat-left-text-fill"></i> Description
+          </label>
+          <textarea class="form-control" 
+                    id="description" 
+                    name="description" 
+                    rows="5" 
+                    maxlength="5000">{{ event.description or '' }}</textarea>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn" style="background: var(--royal-purple); color: white;">
+            <i class="bi bi-check-circle"></i> Save Changes
+          </button>
+          <a href="{{ url_for('events.manage_events') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-x-circle"></i> Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}

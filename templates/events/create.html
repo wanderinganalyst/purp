@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Event - BecauseImStuck{% endblock %}
+
+{% block content %}
+  <div class="mb-4">
+    <h1 class="h2 mb-1" style="color: var(--royal-purple);">
+      <i class="bi bi-calendar-plus-fill"></i> Create Event
+    </h1>
+    <p class="text-muted mb-0">Schedule a new event for your constituents</p>
+  </div>
+
+  <div class="card shadow-sm" style="border-left: 4px solid var(--light-purple);">
+    <div class="card-body">
+      <form method="post" action="{{ url_for('events.create_event') }}">
+        
+        <!-- Title -->
+        <div class="mb-3">
+          <label for="title" class="form-label">
+            <i class="bi bi-tag-fill"></i> Event Title <span class="text-danger">*</span>
+          </label>
+          <input type="text" 
+                 class="form-control" 
+                 id="title" 
+                 name="title" 
+                 placeholder="e.g., Town Hall Meeting"
+                 maxlength="255"
+                 required>
+        </div>
+
+        {% if user.role == 'admin' %}
+        <!-- Representative Selection (Admin Only) -->
+        <div class="mb-3">
+          <label for="representative_id" class="form-label">
+            <i class="bi bi-people-fill"></i> Representative <span class="text-danger">*</span>
+          </label>
+          <select class="form-select" id="representative_id" name="representative_id" required>
+            <option value="">-- Select Representative --</option>
+            {% for r in representatives %}
+              <option value="{{ r.id }}">District {{ r.district }} - {{ r.name if r.name else 'Unnamed' }}</option>
+            {% endfor %}
+          </select>
+          <small class="text-muted">Choose which representative this event belongs to.</small>
+        </div>
+        {% endif %}
+
+        <!-- Event Template -->
+        <div class="mb-3">
+          <label for="template_id" class="form-label">
+            <i class="bi bi-file-earmark-richtext"></i> Event Template
+          </label>
+          <select class="form-select" id="template_id" name="template_id">
+            <option value="">-- No Template (Basic Event) --</option>
+            {% for template in templates %}
+              <option value="{{ template.id }}">{{ template.name }}</option>
+            {% endfor %}
+          </select>
+          <small class="text-muted">Templates include purchasable options like seats, merchandise, etc.</small>
+        </div>
+
+        <!-- Event Type -->
+        <div class="mb-3">
+          <label for="event_type" class="form-label">
+            <i class="bi bi-bookmark-fill"></i> Event Type
+          </label>
+          <select class="form-select" id="event_type" name="event_type">
+            <option value="">-- Select Type --</option>
+            <option value="town_hall">Town Hall</option>
+            <option value="meeting">Community Meeting</option>
+            <option value="fundraiser">Fundraiser</option>
+            <option value="rally">Rally</option>
+            <option value="dinner">Dinner Event</option>
+            <option value="coffee_hour">Coffee Hour</option>
+            <option value="forum">Forum</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <!-- Date and Time -->
+        <div class="row mb-3">
+          <div class="col-md-8">
+            <label for="event_date" class="form-label">
+              <i class="bi bi-calendar3"></i> Date & Time <span class="text-danger">*</span>
+            </label>
+            <input type="datetime-local" 
+                   class="form-control" 
+                   id="event_date" 
+                   name="event_date" 
+                   required>
+          </div>
+          <div class="col-md-4">
+            <label for="event_time" class="form-label">
+              <i class="bi bi-clock"></i> Time Display
+            </label>
+            <input type="text" 
+                   class="form-control" 
+                   id="event_time" 
+                   name="event_time" 
+                   placeholder="e.g., 6:00 PM - 8:00 PM"
+                   maxlength="20">
+            <small class="text-muted">Optional display format</small>
+          </div>
+        </div>
+
+        <!-- Address Section -->
+        <h5 class="border-bottom pb-2 mb-3 mt-4">
+          <i class="bi bi-geo-alt-fill"></i> Event Address
+        </h5>
+
+        <!-- Location Name -->
+        <div class="mb-3">
+          <label for="location" class="form-label">
+            <i class="bi bi-building"></i> Venue/Location Name
+          </label>
+          <input type="text" 
+                 class="form-control" 
+                 id="location" 
+                 name="location" 
+                 placeholder="e.g., City Hall, Community Center"
+                 maxlength="255">
+        </div>
+
+        <!-- Street Address -->
+        <div class="mb-3">
+          <label for="street_address" class="form-label">
+            <i class="bi bi-signpost"></i> Street Address
+          </label>
+          <input type="text" 
+                 class="form-control" 
+                 id="street_address" 
+                 name="street_address" 
+                 placeholder="123 Main St"
+                 maxlength="255">
+        </div>
+
+        <!-- City, State, Zip -->
+        <div class="row mb-3">
+          <div class="col-md-5">
+            <label for="city" class="form-label">City</label>
+            <input type="text" 
+                   class="form-control" 
+                   id="city" 
+                   name="city" 
+                   placeholder="Jefferson City"
+                   maxlength="100">
+          </div>
+          <div class="col-md-3">
+            <label for="state" class="form-label">State</label>
+            <input type="text" 
+                   class="form-control" 
+                   id="state" 
+                   name="state" 
+                   placeholder="MO"
+                   maxlength="2"
+                   pattern="[A-Z]{2}">
+          </div>
+          <div class="col-md-4">
+            <label for="zipcode" class="form-label">ZIP Code</label>
+            <input type="text" 
+                   class="form-control" 
+                   id="zipcode" 
+                   name="zipcode" 
+                   placeholder="65101"
+                   maxlength="10">
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="mb-3">
+          <label for="description" class="form-label">
+            <i class="bi bi-chat-left-text-fill"></i> Description
+          </label>
+          <textarea class="form-control" 
+                    id="description" 
+                    name="description" 
+                    rows="5" 
+                    placeholder="Provide details about the event..."
+                    maxlength="5000"></textarea>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn" style="background: var(--royal-purple); color: white;">
+            <i class="bi bi-check-circle"></i> Create Event
+          </button>
+          <a href="{{ url_for('events.manage_events') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-x-circle"></i> Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}

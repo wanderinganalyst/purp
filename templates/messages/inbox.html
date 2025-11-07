@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}My Messages - BecauseImStuck{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h2 mb-1" style="color: var(--royal-purple);">
+        <i class="bi bi-envelope-fill"></i> My Messages
+      </h1>
+      <p class="text-muted mb-0">Messages sent to your representatives</p>
+    </div>
+    <div>
+      <button class="btn" style="background: var(--royal-purple); color: white;" data-bs-toggle="collapse" data-bs-target="#quickCompose">
+        <i class="bi bi-plus-circle"></i> Quick Compose
+      </button>
+      <a href="{{ url_for('messages.compose') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-pencil-square"></i> Full Compose
+      </a>
+    </div>
+  </div>
+
+  <!-- Quick Compose Form (Collapsible) -->
+  <div class="collapse mb-4" id="quickCompose">
+    <div class="card shadow-sm" style="border-left: 4px solid var(--royal-purple);">
+      <div class="card-header" style="background: var(--pale-purple);">
+        <h5 class="mb-0"><i class="bi bi-envelope-plus"></i> Quick Message</h5>
+      </div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('messages.compose') }}">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="quick_recipient_type" class="form-label">To <span class="text-danger">*</span></label>
+              <select class="form-select" id="quick_recipient_type" name="recipient_type" required>
+                <option value="">-- Select Recipient --</option>
+                <option value="senator">My Senator</option>
+                <option value="representative">My Representative</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="quick_subject" class="form-label">Subject <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="quick_subject" name="subject" required maxlength="255" placeholder="Brief subject line">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="quick_content" class="form-label">Message <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="quick_content" name="content" rows="4" required placeholder="Write your message..."></textarea>
+          </div>
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-secondary" data-bs-toggle="collapse" data-bs-target="#quickCompose">Cancel</button>
+            <button type="submit" class="btn" style="background: var(--royal-purple); color: white;">
+              <i class="bi bi-send"></i> Send Message
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {% if messages %}
+    <div class="list-group shadow">
+      {% for msg in messages %}
+        <div class="list-group-item" style="border-left: 4px solid var(--light-purple);">
+          <div class="d-flex w-100 justify-content-between align-items-start">
+            <a href="{{ url_for('messages.view_message', message_id=msg.id) }}" 
+               class="flex-grow-1 text-decoration-none text-dark">
+              <div class="d-flex align-items-center mb-2">
+                <h5 class="mb-0 me-3" style="color: var(--deep-purple);">{{ msg.subject }}</h5>
+                <span class="badge" style="background: var(--pale-purple); color: var(--deep-purple);">
+                  {{ msg.recipient_type.capitalize() }}
+                </span>
+              </div>
+              <p class="mb-2">
+                <strong>To:</strong> {{ msg.recipient_rep_name }} 
+                <small class="text-muted">(District {{ msg.recipient_rep_district }})</small>
+              </p>
+              <p class="mb-1 text-muted small">{{ msg.content[:150] }}{% if msg.content|length > 150 %}...{% endif %}</p>
+              <small class="text-muted">
+                <i class="bi bi-clock"></i> Sent {{ msg.sent_at.strftime('%B %d, %Y at %I:%M %p') }}
+              </small>
+            </a>
+            <div class="ms-3 d-flex align-items-center gap-2">
+              <form method="post" 
+                    action="{{ url_for('messages.delete_message', message_id=msg.id) }}"
+                    style="display: inline;"
+                    onsubmit="return confirm('Are you sure you want to delete this message?');">
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+              <a href="{{ url_for('messages.view_message', message_id=msg.id) }}" class="text-decoration-none">
+                <i class="bi bi-chevron-right" style="color: var(--accent-purple);"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert" style="background: var(--pale-purple); border-left: 4px solid var(--royal-purple);">
+      <i class="bi bi-info-circle-fill"></i> You haven't sent any messages yet.
+      <a href="{{ url_for('messages.compose') }}" class="alert-link">Send your first message</a> to your representative or senator.
+    </div>
+  {% endif %}
+{% endblock %}

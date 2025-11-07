@@ -40,6 +40,10 @@ def role_required(role_name):
             if 'role' not in session:
                 flash('Please log in to access this page.')
                 return redirect(url_for('auth.login', next=request.path))
+            # Admins have access to everything
+            if session.get('role') == 'admin':
+                return f(*args, **kwargs)
+            # Otherwise, check if user has the required role
             if session.get('role') != role_name:
                 flash('You do not have permission to access this page.')
                 return redirect(url_for('index'))
@@ -264,11 +268,13 @@ def login():
             next_url = request.args.get('next') or url_for('index')
             return redirect(next_url)
         
+        # Invalid credentials: clear any existing session to avoid confusion
+        session.clear()
         flash('Invalid username or password.')
     return render_template('login.html')
 
 
-@auth_bp.route('/logout')
+@auth_bp.route('/logout', methods=['GET', 'POST'])
 def logout():
     session.clear()
     flash('Logged out.')
@@ -324,8 +330,19 @@ def signup():
             return render_template('signup.html')
         
         # Validate role
-        if role not in ['regular', 'power']:
+        if role not in ['regular', 'power', 'admin', 'candidate']:
             role = 'regular'
+        # For candidate users, find the Candidate Representative placeholder
+        candidate_rep_id = None
+        if role == 'candidate':
+            from models import Representative
+            candidate_rep = Representative.query.filter_by(
+                last_name='Candidate',
+                first_name='Campaign'
+            ).first()
+            if candidate_rep:
+                candidate_rep_id = candidate_rep.id
+        
         
         # Create new user
         user = User(
@@ -336,7 +353,8 @@ def signup():
             city=city,
             state=state,
             zipcode=zipcode,
-            address_verified=False
+            address_verified=False,
+            representative_id=candidate_rep_id
         )
         user.set_password(password)
         
@@ -371,3 +389,77 @@ def signup():
             return render_template('signup.html')
 
     return render_template('signup.html')
+
+
+@auth_bp.route('/confirm-reps', methods=['GET', 'POST'])
+@login_required
+def confirm_reps():
+    """Look up and confirm user's representatives."""
+    user = User.query.get(session['user_id'])
+    if not user:
+        flash('User not found.')
+        return redirect(url_for('auth.login'))
+    
+    if request.method == 'POST':
+        # User confirmed they want to look up representatives
+        try:
+            # Format address for lookup
+            full_address = format_address(
+                user.street_address,
+                user.city,
+                user.state,
+                user.zipcode,
+                user.apt_unit
+            )
+            
+            # Perform lookup
+            rep_info = RepresentativeLookup.lookup_representatives(
+                user.street_address,
+                user.city,
+                user.zipcode
+            )
+            
+            if not rep_info:
+                flash('Unable to look up representatives. Please try again later.')
+                return redirect(url_for('auth.confirm_reps'))
+            
+            # Check if we got any results
+            has_senator = rep_info.get('state_senator') and rep_info['state_senator'].get('name')
+            has_rep = rep_info.get('state_representative') and rep_info['state_representative'].get('name')
+            
+            if not has_senator and not has_rep:
+                flash('No representatives found for your address. Please verify your address is correct.')
+                return redirect(url_for('auth.edit_address'))
+            
+            # Update user record
+            success = user.update_representatives(rep_info)
+            
+            if success:
+                db.session.commit()
+                flash('Your representatives have been updated!')
+            else:
+                flash('Error updating representative information.')
+            
+            return redirect(url_for('index'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred while looking up your representatives.')
+            return redirect(url_for('auth.confirm_reps'))
+    
+    # GET request - show current info and confirmation form
+    rep_display = user.get_representatives_display()
+    user_address = format_address(
+        user.street_address,
+        user.city,
+        user.state,
+        user.zipcode,
+        user.apt_unit
+    )
+    
+    return render_template(
+        'auth/confirm_reps.html',
+        user=user,
+        rep_display=rep_display,
+        user_address=user_address
+    )

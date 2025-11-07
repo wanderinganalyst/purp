@@ -45,7 +45,14 @@ class TestUserModel:
     
     def test_update_representatives(self, app, db_session):
         """Test updating representative information."""
-        user = User(username='testuser')
+        user = User(
+            username='user_reps',
+            street_address='123 Test St',
+            city='Test City',
+            state='MO',
+            zipcode='12345'
+        )
+        user.set_password('TestPass123!')
         db_session.add(user)
         db_session.commit()
         
@@ -94,12 +101,24 @@ class TestUserModel:
     
     def test_unique_username(self, app, db_session):
         """Test that usernames must be unique."""
-        user1 = User(username='testuser')
+        user1 = User(
+            username='unique_user',
+            street_address='123 Test St',
+            city='Test City',
+            state='MO',
+            zipcode='12345'
+        )
         user1.set_password('Pass123!')
         db_session.add(user1)
         db_session.commit()
         
-        user2 = User(username='testuser')
+        user2 = User(
+            username='unique_user',
+            street_address='456 Other St',
+            city='Other City',
+            state='CA',
+            zipcode='54321'
+        )
         user2.set_password('Pass456!')
         db_session.add(user2)
         
@@ -112,7 +131,13 @@ class TestCommentModel:
     
     def test_create_comment(self, app, db_session):
         """Test creating a comment."""
-        user = User(username='testuser')
+        user = User(
+            username='comment_user',
+            street_address='123 Test St',
+            city='Test City',
+            state='MO',
+            zipcode='12345'
+        )
         user.set_password('Pass123!')
         db_session.add(user)
         db_session.commit()
@@ -133,7 +158,13 @@ class TestCommentModel:
     
     def test_comment_user_relationship(self, app, db_session):
         """Test the relationship between comment and user."""
-        user = User(username='testuser')
+        user = User(
+            username='comment_user_rel',
+            street_address='123 Test St',
+            city='Test City',
+            state='MO',
+            zipcode='12345'
+        )
         user.set_password('Pass123!')
         db_session.add(user)
         db_session.commit()
@@ -151,9 +182,22 @@ class TestCommentModel:
     
     def test_comment_repr(self, app, db_session):
         """Test comment representation."""
+        user = User(
+            username='comment_user_repr',
+            street_address='123 Test St',
+            city='Test City',
+            state='MO',
+            zipcode='12345'
+        )
+        user.set_password('Pass123!')
+        db_session.add(user)
+        db_session.commit()
+
         comment = Comment(
             bill_id='HB 123',
-            user_id=1,
+            user_id=user.id,
             content='Test'
         )
+        db_session.add(comment)
+        db_session.commit()
         assert 'HB 123' in repr(comment)
